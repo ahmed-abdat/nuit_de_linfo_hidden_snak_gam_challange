@@ -11,6 +11,35 @@ export interface Position {
 // Snake movement direction
 export type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
 
+// Difficulty levels
+export type Difficulty = 'EASY' | 'NORMAL' | 'HARD';
+
+// Game screen states (for menu navigation)
+export type GameScreen = 'title' | 'difficulty' | 'playing' | 'paused' | 'gameOver';
+
+// Obstacle on the game grid (same structure as Position for consistency)
+export type Obstacle = Position;
+
+// Score popup effect
+export interface ScorePopup {
+  x: number;
+  y: number;
+  value: number;
+  startTime: number;
+}
+
+// Difficulty configuration (matches DIFFICULTY_LEVELS structure)
+export interface DifficultyConfig {
+  id: Difficulty;
+  name: string;
+  description: string;
+  initialSpeed: number;
+  speedIncrement: number;
+  maxSpeedReduction: number;
+  obstacleSpawnRate: number;
+  maxObstacles: number;
+}
+
 // Cartridge states for the GameBoy
 export type CartridgeState = 'empty' | 'booting' | 'showcase' | 'ready';
 
@@ -42,6 +71,12 @@ export interface SnakeGameState {
   isPaused: boolean;
   gameStarted: boolean;
   isActive: boolean;
+  // New enhanced features
+  difficulty: Difficulty;
+  obstacles: Obstacle[];
+  gameScreen: GameScreen;
+  scorePopups: ScorePopup[];
+  lastObstacleScore: number; // Track when last obstacle was spawned
 }
 
 // UI state for the GameBoy
@@ -51,6 +86,7 @@ export interface GameBoyUIState {
   bootPhase: number;
   screenShake: boolean;
   buttonPressed: string | null;
+  screenFlash: boolean; // Flash effect when obstacle spawns
 }
 
 // Actions for the game reducer

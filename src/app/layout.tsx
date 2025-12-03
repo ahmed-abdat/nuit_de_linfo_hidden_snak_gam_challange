@@ -12,11 +12,35 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://hidden-snak-gam-chall.vercel.app";
+
 export const metadata: Metadata = {
-  title: "RetroSnake - Game Boy Edition | Nuit de l'Info 2025",
-  description: "Jouez au Snake classique directement dans un Game Boy virtuel. Créé pour le Défi #483 AUTOCUT de la Nuit de l'Info 2025.",
-  keywords: ["snake", "game boy", "retro gaming", "nuit de l'info", "2025", "AUTOCUT"],
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "RetroCollect - Vintage Gaming Store",
+    template: "%s | RetroCollect",
+  },
+  description: "Découvrez notre collection de consoles rétro et jeux vintage. Un secret se cache peut-être dans cette boutique nostalgique...",
+  keywords: ["retro gaming", "vintage consoles", "game boy", "nintendo", "collection", "nuit de l'info", "2025"],
   authors: [{ name: "Team Mauritania" }],
+  creator: "Team Mauritania",
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    url: siteUrl,
+    siteName: "RetroCollect",
+    title: "RetroCollect - Vintage Gaming Store",
+    description: "Découvrez notre collection de consoles rétro et jeux vintage. Un secret se cache peut-être dans cette boutique nostalgique...",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "RetroCollect - Vintage Gaming Store",
+    description: "Découvrez notre collection de consoles rétro et jeux vintage.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({

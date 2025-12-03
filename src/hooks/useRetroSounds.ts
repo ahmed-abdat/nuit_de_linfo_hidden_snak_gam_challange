@@ -2,7 +2,17 @@
 
 import { useCallback, useRef, useEffect } from 'react';
 
-type SoundType = 'boot' | 'error' | 'eat' | 'gameOver' | 'click' | 'start';
+type SoundType =
+  | 'boot'
+  | 'error'
+  | 'eat'
+  | 'gameOver'
+  | 'click'
+  | 'start'
+  | 'select'   // Menu navigation
+  | 'confirm'  // Difficulty selected
+  | 'hit'      // Hit obstacle
+  | 'levelUp'; // New obstacle spawns
 
 interface RetroSoundsOptions {
   enabled?: boolean;
@@ -155,6 +165,38 @@ export function useRetroSounds(options: RetroSoundsOptions = {}) {
           { freq: 392, dur: 0.1, delay: 0.2 },    // G4
           { freq: 523, dur: 0.25, delay: 0.3 },   // C5
         ], 'square');
+        break;
+
+      case 'select':
+        // Menu navigation - short blip
+        playTone(440, 0.04, 'square');
+        break;
+
+      case 'confirm':
+        // Difficulty selected - rising confirmation tone
+        playSequence([
+          { freq: 523, dur: 0.08, delay: 0 },     // C5
+          { freq: 659, dur: 0.08, delay: 0.08 },  // E5
+          { freq: 784, dur: 0.12, delay: 0.16 },  // G5
+        ], 'square');
+        break;
+
+      case 'hit':
+        // Hit obstacle - low thud with impact
+        playSequence([
+          { freq: 80, dur: 0.08, delay: 0 },
+          { freq: 60, dur: 0.15, delay: 0.05 },
+          { freq: 40, dur: 0.2, delay: 0.1 },
+        ], 'sawtooth');
+        break;
+
+      case 'levelUp':
+        // New obstacle spawns - alert tone
+        playSequence([
+          { freq: 660, dur: 0.06, delay: 0 },     // E5
+          { freq: 880, dur: 0.06, delay: 0.06 },  // A5
+          { freq: 660, dur: 0.08, delay: 0.12 },  // E5
+        ], 'triangle');
         break;
     }
   }, [enabled, playTone, playSequence]);

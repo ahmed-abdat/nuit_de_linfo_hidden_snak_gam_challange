@@ -98,3 +98,53 @@ export const TIMING = {
 export const INITIAL_SNAKE_POSITION = { x: 10, y: 10 };
 export const INITIAL_FOOD_POSITION = { x: 15, y: 15 };
 export const INITIAL_DIRECTION = 'RIGHT' as const;
+
+// Difficulty level configurations
+export const DIFFICULTY_LEVELS = {
+  EASY: {
+    id: 'EASY' as const,
+    name: 'FACILE',
+    description: 'Lent, peu obstacles',
+    initialSpeed: 250,
+    speedIncrement: 0.3,
+    maxSpeedReduction: 60,
+    obstacleSpawnRate: 50, // Spawn obstacle every N points
+    maxObstacles: 5,
+  },
+  NORMAL: {
+    id: 'NORMAL' as const,
+    name: 'NORMAL',
+    description: 'Equilibre parfait',
+    initialSpeed: 200,
+    speedIncrement: 0.5,
+    maxSpeedReduction: 80,
+    obstacleSpawnRate: 30,
+    maxObstacles: 10,
+  },
+  HARD: {
+    id: 'HARD' as const,
+    name: 'DIFFICILE',
+    description: 'Rapide, obstacles!',
+    initialSpeed: 150,
+    speedIncrement: 0.8,
+    maxSpeedReduction: 100,
+    obstacleSpawnRate: 20,
+    maxObstacles: 15,
+  },
+} as const;
+
+// Difficulty keys for iteration
+export const DIFFICULTY_ORDER = ['EASY', 'NORMAL', 'HARD'] as const;
+
+// Obstacle rendering
+export const OBSTACLE_COLORS = {
+  fill: '#1a2810', // Darker than darkest for distinction
+  pattern: '#0f380f', // Hatched pattern color
+} as const;
+
+// Visual effect timing
+export const EFFECTS = {
+  obstacleSpawnFlashDuration: 150,
+  scorePopupDuration: 800,
+  dangerWarningDistance: 2, // Grid cells
+} as const;

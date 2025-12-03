@@ -33,6 +33,12 @@ const initialState: GameReducerState = {
   gameStarted: false,
   isActive: false,
   directionQueue: [],
+  // Enhanced game features
+  difficulty: 'NORMAL',
+  obstacles: [],
+  gameScreen: 'title',
+  scorePopups: [],
+  lastObstacleScore: 0,
 };
 
 // Reducer function
@@ -147,6 +153,10 @@ function gameReducer(state: GameReducerState, action: GameAction): GameReducerSt
         gameStarted: true,
         isActive: true,
         directionQueue: [],
+        obstacles: [],
+        scorePopups: [],
+        lastObstacleScore: 0,
+        gameScreen: 'playing',
       };
     }
 

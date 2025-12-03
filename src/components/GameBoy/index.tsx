@@ -8,16 +8,16 @@ import { GlowingEffect } from '@/components/ui/GlowingEffect';
 
 import { GameBoyScreen } from './GameBoyScreen';
 import { DPad, ActionButtons, StartSelectButtons, SpeakerGrills } from './GameBoyControls';
-import type { Position, Direction, CartridgeState, GameBoyProps } from './types';
+import type { Position, Direction, CartridgeState, GameBoyProps, Difficulty, GameScreen, Obstacle, ScorePopup } from './types';
 import {
   GRID_SIZE,
-  INITIAL_SPEED,
-  SPEED_INCREMENT,
-  MAX_SPEED_REDUCTION,
   TIMING,
   INITIAL_SNAKE_POSITION,
   INITIAL_FOOD_POSITION,
   INITIAL_DIRECTION,
+  DIFFICULTY_LEVELS,
+  DIFFICULTY_ORDER,
+  EFFECTS,
 } from '@/constants/game';
 
 /**
@@ -57,11 +57,19 @@ export function GameBoy({
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
 
+  // Enhanced game features
+  const [difficulty, setDifficulty] = useState<Difficulty>('NORMAL');
+  const [gameScreen, setGameScreen] = useState<GameScreen>('title');
+  const [obstacles, setObstacles] = useState<Obstacle[]>([]);
+  const [scorePopups, setScorePopups] = useState<ScorePopup[]>([]);
+  const [lastObstacleScore, setLastObstacleScore] = useState(0);
+
   // UI state
   const [discovered, setDiscovered] = useState(false);
   const [cartridgeState, setCartridgeState] = useState<CartridgeState>('empty');
   const [bootPhase, setBootPhase] = useState(0);
   const [screenShake, setScreenShake] = useState(false);
+  const [screenFlash, setScreenFlash] = useState(false);
   const [buttonPressed, setButtonPressed] = useState<string | null>(null);
 
   // Refs
@@ -72,7 +80,7 @@ export function GameBoy({
   // Sound effects
   const { playSound } = useRetroSounds({ enabled: soundEnabled, volume: 0.25 });
 
-  // Generate random food position
+  // Generate random food position (avoid snake and obstacles)
   const generateFood = useCallback((): Position => {
     let newFood: Position;
     do {
@@ -80,11 +88,44 @@ export function GameBoy({
         x: Math.floor(Math.random() * GRID_SIZE),
         y: Math.floor(Math.random() * GRID_SIZE),
       };
-    } while (snake.some(segment => segment.x === newFood.x && segment.y === newFood.y));
+    } while (
+      snake.some(segment => segment.x === newFood.x && segment.y === newFood.y) ||
+      obstacles.some(obs => obs.x === newFood.x && obs.y === newFood.y)
+    );
     return newFood;
-  }, [snake]);
+  }, [snake, obstacles]);
 
-  // Reset game state
+  // Generate random obstacle position (avoid snake, food, and existing obstacles)
+  const generateObstacle = useCallback((): Obstacle | null => {
+    const maxAttempts = 100;
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const newObs: Obstacle = {
+        x: Math.floor(Math.random() * GRID_SIZE),
+        y: Math.floor(Math.random() * GRID_SIZE),
+      };
+
+      // Check it doesn't overlap with snake, food, or existing obstacles
+      const overlapsSnake = snake.some(seg => seg.x === newObs.x && seg.y === newObs.y);
+      const overlapsFood = food.x === newObs.x && food.y === newObs.y;
+      const overlapsObstacle = obstacles.some(obs => obs.x === newObs.x && obs.y === newObs.y);
+
+      // Also avoid spawning too close to snake head (give player reaction time)
+      const head = snake[0];
+      const tooCloseToHead = Math.abs(head.x - newObs.x) <= 2 && Math.abs(head.y - newObs.y) <= 2;
+
+      if (!overlapsSnake && !overlapsFood && !overlapsObstacle && !tooCloseToHead) {
+        return newObs;
+      }
+
+      attempts++;
+    }
+
+    return null; // Couldn't find valid position
+  }, [snake, food, obstacles]);
+
+  // Reset game state (keeps current difficulty)
   const resetGame = useCallback(() => {
     setSnake([INITIAL_SNAKE_POSITION]);
     setFood(INITIAL_FOOD_POSITION);
@@ -92,8 +133,29 @@ export function GameBoy({
     directionRef.current = INITIAL_DIRECTION;
     setGameOver(false);
     setScore(0);
+    setObstacles([]);
+    setScorePopups([]);
+    setLastObstacleScore(0);
     setGameStarted(true);
     setIsActive(true);
+    setGameScreen('playing');
+  }, []);
+
+  // Go back to difficulty menu
+  const goToMenu = useCallback(() => {
+    setSnake([INITIAL_SNAKE_POSITION]);
+    setFood(INITIAL_FOOD_POSITION);
+    setDirection(INITIAL_DIRECTION);
+    directionRef.current = INITIAL_DIRECTION;
+    setGameOver(false);
+    setScore(0);
+    setObstacles([]);
+    setScorePopups([]);
+    setLastObstacleScore(0);
+    setGameStarted(false);
+    setIsActive(false);
+    setIsPaused(false);
+    setGameScreen('difficulty');
   }, []);
 
   // Handle cartridge insertion
@@ -118,7 +180,10 @@ export function GameBoy({
             setDiscovered(true);
             setGameStarted(false);
             setGameOver(false);
-            resetGame();
+            setGameScreen('difficulty'); // Show difficulty menu first
+            setObstacles([]);
+            setScorePopups([]);
+            setLastObstacleScore(0);
           }, TIMING.bootCompleteDelay),
         ];
 
@@ -162,27 +227,40 @@ export function GameBoy({
     // Only Snake cartridge actually controls the game
     if (cartridgeState !== 'ready') return;
 
-    if (!gameStarted && !gameOver) {
-      setGameStarted(true);
-      setIsActive(true);
-      playSound('start');
+    // Handle difficulty menu navigation
+    if (gameScreen === 'difficulty') {
+      if (dir === 'UP' || dir === 'DOWN') {
+        playSound('select');
+        setDifficulty(current => {
+          const currentIndex = DIFFICULTY_ORDER.indexOf(current);
+          if (dir === 'UP') {
+            return DIFFICULTY_ORDER[(currentIndex - 1 + DIFFICULTY_ORDER.length) % DIFFICULTY_ORDER.length];
+          } else {
+            return DIFFICULTY_ORDER[(currentIndex + 1) % DIFFICULTY_ORDER.length];
+          }
+        });
+      }
+      return;
     }
 
-    if (gameOver || isPaused) return;
+    // Handle game playing state
+    if (gameScreen === 'playing') {
+      if (gameOver || isPaused) return;
 
-    // Prevent 180-degree turns
-    const opposites: Record<Direction, Direction> = {
-      'UP': 'DOWN',
-      'DOWN': 'UP',
-      'LEFT': 'RIGHT',
-      'RIGHT': 'LEFT',
-    };
+      // Prevent 180-degree turns
+      const opposites: Record<Direction, Direction> = {
+        'UP': 'DOWN',
+        'DOWN': 'UP',
+        'LEFT': 'RIGHT',
+        'RIGHT': 'LEFT',
+      };
 
-    if (dir !== opposites[directionRef.current]) {
-      setDirection(dir);
-      directionRef.current = dir;
+      if (dir !== opposites[directionRef.current]) {
+        setDirection(dir);
+        directionRef.current = dir;
+      }
     }
-  }, [cartridgeState, gameStarted, gameOver, isPaused, playSound]);
+  }, [cartridgeState, gameScreen, gameOver, isPaused, playSound]);
 
   // A button handler - visual feedback for all cartridges, game control only for Snake
   const handleAPress = useCallback(() => {
@@ -196,15 +274,19 @@ export function GameBoy({
     // Only Snake cartridge actually controls the game
     if (cartridgeState !== 'ready') return;
 
+    // Difficulty menu - A also starts the game (easier to tap)
+    if (gameScreen === 'difficulty') {
+      playSound('confirm');
+      resetGame();
+      return;
+    }
+
+    // Game over - replay with same difficulty
     if (gameOver) {
       playSound('start');
       resetGame();
-    } else if (!gameStarted) {
-      playSound('start');
-      setGameStarted(true);
-      setIsActive(true);
     }
-  }, [cartridgeState, gameOver, gameStarted, playSound, resetGame]);
+  }, [cartridgeState, gameScreen, gameOver, playSound, resetGame]);
 
   // B button handler - visual feedback for all cartridges
   const handleBPress = useCallback(() => {
@@ -228,24 +310,33 @@ export function GameBoy({
     // Only Snake cartridge actually controls the game
     if (cartridgeState !== 'ready') return;
 
-    if (!gameStarted) {
-      playSound('start');
-      setGameStarted(true);
-      setIsActive(true);
-      setIsPaused(false);
-    } else if (gameOver) {
+    // Difficulty menu - start game
+    if (gameScreen === 'difficulty') {
+      playSound('confirm');
+      resetGame();
+      return;
+    }
+
+    // Game over - replay
+    if (gameOver) {
       playSound('start');
       resetGame();
-      setIsPaused(false);
-    } else {
+      return;
+    }
+
+    // Playing - toggle pause
+    if (gameScreen === 'playing' && gameStarted) {
       setIsPaused(prev => {
         if (prev) {
           playSound('start');
+          setGameScreen('playing');
+        } else {
+          setGameScreen('paused');
         }
         return !prev;
       });
     }
-  }, [cartridgeState, gameStarted, gameOver, playSound, resetGame]);
+  }, [cartridgeState, gameScreen, gameStarted, gameOver, playSound, resetGame]);
 
   // SELECT button handler - visual feedback for all cartridges, game control only for Snake
   const handleSelectPress = useCallback(() => {
@@ -259,19 +350,12 @@ export function GameBoy({
     // Only Snake cartridge actually controls the game
     if (cartridgeState !== 'ready') return;
 
-    if (gameStarted || gameOver) {
-      playSound('error');
-      setGameStarted(false);
-      setGameOver(false);
-      setIsActive(false);
-      setIsPaused(false);
-      setScore(0);
-      setSnake([INITIAL_SNAKE_POSITION]);
-      setFood(INITIAL_FOOD_POSITION);
-      setDirection(INITIAL_DIRECTION);
-      directionRef.current = INITIAL_DIRECTION;
+    // Go back to difficulty menu from any game state
+    if (gameScreen === 'playing' || gameScreen === 'paused' || gameOver) {
+      playSound('select');
+      goToMenu();
     }
-  }, [cartridgeState, gameStarted, gameOver, playSound]);
+  }, [cartridgeState, gameScreen, gameOver, playSound, goToMenu]);
 
   // Play eat sound when score increases
   useEffect(() => {
@@ -341,11 +425,13 @@ export function GameBoy({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [cartridgeState, handleDPadPress, handleAPress, handleStartPress, handleSelectPress]);
 
-  // Game loop
+  // Game loop with difficulty-based speed and obstacle collision
   useEffect(() => {
     if (!isActive || !gameStarted || gameOver || isPaused) return;
 
-    const speed = INITIAL_SPEED - Math.min(score * SPEED_INCREMENT, MAX_SPEED_REDUCTION);
+    // Get difficulty config for speed
+    const diffConfig = DIFFICULTY_LEVELS[difficulty];
+    const speed = diffConfig.initialSpeed - Math.min(score * diffConfig.speedIncrement, diffConfig.maxSpeedReduction);
 
     const gameLoop = setInterval(() => {
       setSnake(currentSnake => {
@@ -375,6 +461,15 @@ export function GameBoy({
         // Self collision
         if (currentSnake.some(segment => segment.x === head.x && segment.y === head.y)) {
           setGameOver(true);
+          setGameScreen('gameOver');
+          return currentSnake;
+        }
+
+        // Obstacle collision
+        if (obstacles.some(obs => obs.x === head.x && obs.y === head.y)) {
+          playSound('hit');
+          setGameOver(true);
+          setGameScreen('gameOver');
           return currentSnake;
         }
 
@@ -382,8 +477,17 @@ export function GameBoy({
 
         // Food collision
         if (head.x === food.x && head.y === food.y) {
-          setScore(s => s + 10);
+          const newScore = score + 10;
+          setScore(newScore);
           setFood(generateFood());
+
+          // Add score popup at food location
+          setScorePopups(prev => [...prev, {
+            x: food.x,
+            y: food.y,
+            value: 10,
+            startTime: Date.now(),
+          }]);
         } else {
           newSnake.pop();
         }
@@ -393,7 +497,47 @@ export function GameBoy({
     }, speed);
 
     return () => clearInterval(gameLoop);
-  }, [isActive, gameStarted, gameOver, isPaused, food, generateFood, score]);
+  }, [isActive, gameStarted, gameOver, isPaused, food, generateFood, score, difficulty, obstacles, playSound]);
+
+  // Obstacle spawning based on score
+  useEffect(() => {
+    if (!gameStarted || gameOver || isPaused) return;
+
+    const diffConfig = DIFFICULTY_LEVELS[difficulty];
+    const targetObstacleCount = Math.floor(score / diffConfig.obstacleSpawnRate);
+
+    // Check if we should spawn a new obstacle
+    if (
+      obstacles.length < targetObstacleCount &&
+      obstacles.length < diffConfig.maxObstacles &&
+      score > lastObstacleScore
+    ) {
+      const newObstacle = generateObstacle();
+      if (newObstacle) {
+        setObstacles(prev => [...prev, newObstacle]);
+        setLastObstacleScore(score);
+        playSound('levelUp');
+
+        // Screen flash effect
+        setScreenFlash(true);
+        setTimeout(() => setScreenFlash(false), EFFECTS.obstacleSpawnFlashDuration);
+      }
+    }
+  }, [score, gameStarted, gameOver, isPaused, difficulty, obstacles.length, lastObstacleScore, generateObstacle, playSound]);
+
+  // Clean up expired score popups
+  useEffect(() => {
+    if (scorePopups.length === 0) return;
+
+    const cleanup = setInterval(() => {
+      const now = Date.now();
+      setScorePopups(prev =>
+        prev.filter(popup => now - popup.startTime < EFFECTS.scorePopupDuration)
+      );
+    }, 100);
+
+    return () => clearInterval(cleanup);
+  }, [scorePopups.length]);
 
   // Controls only disabled when no cartridge or booting (allows visual feedback for showcase)
   const controlsDisabled = cartridgeState === 'empty' || cartridgeState === 'booting';
@@ -443,20 +587,20 @@ export function GameBoy({
           {/* Screen Bezel */}
           <div className="relative h-full bg-[#4a4848] rounded p-2">
             {/* DOT MATRIX Label - hidden during gameplay to show score */}
-            {!(cartridgeState === 'ready' && gameStarted && !gameOver && !isPaused) && (
+            {!(cartridgeState === 'ready' && gameScreen === 'playing' && gameStarted && !gameOver && !isPaused) && (
               <div className="absolute -top-1 left-2 text-[7px] text-[#2d2d2d] font-bold tracking-wider drop-shadow-sm">
                 DOT MATRIX WITH STEREO SOUND
               </div>
             )}
 
             {/* Score display - shown during active gameplay */}
-            {cartridgeState === 'ready' && gameStarted && !gameOver && !isPaused && (
+            {cartridgeState === 'ready' && gameScreen === 'playing' && gameStarted && !gameOver && !isPaused && (
               <div className="absolute -top-1 left-2 right-2 flex justify-between items-center">
                 <span className="text-[9px] text-[#1a1a1a] font-bold font-mono drop-shadow-sm">
                   SCORE:{score}
                 </span>
                 <span className="text-[7px] text-[#2d2d2d] font-bold font-mono">
-                  SNAKE
+                  {DIFFICULTY_LEVELS[difficulty].name}
                 </span>
               </div>
             )}
@@ -494,6 +638,11 @@ export function GameBoy({
               cartridgeState={cartridgeState}
               bootPhase={bootPhase}
               activeCartridge={activeCartridge}
+              difficulty={difficulty}
+              gameScreen={gameScreen}
+              obstacles={obstacles}
+              scorePopups={scorePopups}
+              screenFlash={screenFlash}
               canvasRef={canvasRef}
             />
           </div>
@@ -551,4 +700,4 @@ export function GameBoy({
 }
 
 // Re-export types for consumers
-export type { GameBoyProps, Position, Direction, CartridgeState } from './types';
+export type { GameBoyProps, Position, Direction, CartridgeState, Difficulty, GameScreen, Obstacle, ScorePopup } from './types';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useMemo } from 'react';
-import type { Position, CartridgeState, ShowcaseColors } from './types';
+import type { Position, CartridgeState, ShowcaseColors, Difficulty, GameScreen, Obstacle, ScorePopup } from './types';
 import {
   COLORS,
   CANVAS_WIDTH,
@@ -10,6 +10,10 @@ import {
   SCALE_FACTOR,
   CELL_WIDTH,
   CELL_HEIGHT,
+  DIFFICULTY_LEVELS,
+  DIFFICULTY_ORDER,
+  OBSTACLE_COLORS,
+  EFFECTS,
 } from '@/constants/game';
 import { drawShowcaseScreen } from './showcaseScreens';
 
@@ -33,6 +37,13 @@ interface GameBoyScreenProps {
   bootPhase: number;
   activeCartridge: string | null;
 
+  // Enhanced game features
+  difficulty: Difficulty;
+  gameScreen: GameScreen;
+  obstacles: Obstacle[];
+  scorePopups: ScorePopup[];
+  screenFlash: boolean;
+
   // Canvas ref (passed from parent for external access)
   canvasRef?: React.RefObject<HTMLCanvasElement | null>;
 }
@@ -48,6 +59,11 @@ export function GameBoyScreen({
   cartridgeState,
   bootPhase,
   activeCartridge,
+  difficulty,
+  gameScreen,
+  obstacles,
+  scorePopups,
+  screenFlash,
   canvasRef: externalRef,
 }: GameBoyScreenProps) {
   const internalRef = useRef<HTMLCanvasElement>(null);
@@ -109,6 +125,12 @@ export function GameBoyScreen({
       return;
     }
 
+    // Handle difficulty selection screen
+    if (gameScreen === 'difficulty') {
+      renderDifficultyMenu(ctx, difficulty, { background, light, dark, darkest });
+      return;
+    }
+
     // Render active game
     renderGameScreen(ctx, {
       snake,
@@ -117,10 +139,19 @@ export function GameBoyScreen({
       gameStarted,
       gameOver,
       isPaused,
+      difficulty,
+      obstacles,
+      scorePopups,
       cellWidth,
       cellHeight,
       colors: { background, light, dark, darkest },
     });
+
+    // Apply screen flash effect (overlay after game render)
+    if (screenFlash) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    }
   }, [
     snake,
     food,
@@ -132,6 +163,11 @@ export function GameBoyScreen({
     cartridgeState,
     bootPhase,
     activeCartridge,
+    difficulty,
+    gameScreen,
+    obstacles,
+    scorePopups,
+    screenFlash,
     cellWidth,
     cellHeight,
     canvasRef,
@@ -214,6 +250,77 @@ function renderBootScreen(
 }
 
 /**
+ * Render difficulty selection menu
+ */
+function renderDifficultyMenu(
+  ctx: CanvasRenderingContext2D,
+  selectedDifficulty: Difficulty,
+  colors: { background: string; light: string; dark: string; darkest: string }
+): void {
+  const { background, light, dark, darkest } = colors;
+
+  // Background
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+  // Title
+  ctx.fillStyle = darkest;
+  ctx.font = `bold ${10 * SCALE_FACTOR}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('DIFFICULTE', CANVAS_WIDTH / 2, 25 * SCALE_FACTOR);
+
+  // Decorative line
+  ctx.strokeStyle = dark;
+  ctx.lineWidth = 1 * SCALE_FACTOR;
+  ctx.beginPath();
+  ctx.moveTo(40 * SCALE_FACTOR, 32 * SCALE_FACTOR);
+  ctx.lineTo(120 * SCALE_FACTOR, 32 * SCALE_FACTOR);
+  ctx.stroke();
+
+  // Difficulty options (centered vertically)
+  const startY = 45 * SCALE_FACTOR;
+  const itemHeight = 20 * SCALE_FACTOR;
+
+  DIFFICULTY_ORDER.forEach((diffKey, index) => {
+    const config = DIFFICULTY_LEVELS[diffKey];
+    const isSelected = diffKey === selectedDifficulty;
+    const y = startY + index * itemHeight;
+
+    // Selection indicator (arrow)
+    if (isSelected) {
+      ctx.fillStyle = darkest;
+      ctx.font = `${10 * SCALE_FACTOR}px monospace`;
+      ctx.textAlign = 'left';
+      ctx.fillText('>', 15 * SCALE_FACTOR, y + 4 * SCALE_FACTOR);
+
+      // Highlight box
+      ctx.strokeStyle = darkest;
+      ctx.lineWidth = 1.5 * SCALE_FACTOR;
+      ctx.strokeRect(
+        25 * SCALE_FACTOR,
+        y - 10 * SCALE_FACTOR,
+        110 * SCALE_FACTOR,
+        22 * SCALE_FACTOR
+      );
+    }
+
+    // Difficulty name
+    ctx.fillStyle = isSelected ? darkest : dark;
+    ctx.font = `${isSelected ? 'bold ' : ''}${9 * SCALE_FACTOR}px monospace`;
+    ctx.textAlign = 'left';
+    ctx.fillText(config.name, 30 * SCALE_FACTOR, y + 4 * SCALE_FACTOR);
+  });
+
+  // Instructions at bottom
+  ctx.fillStyle = dark;
+  ctx.font = `${7 * SCALE_FACTOR}px monospace`;
+  ctx.textAlign = 'center';
+  ctx.fillText('UP/DOWN = Choisir', CANVAS_WIDTH / 2, CANVAS_HEIGHT - 20 * SCALE_FACTOR);
+  ctx.fillStyle = darkest;
+  ctx.fillText('A/START = Jouer', CANVAS_WIDTH / 2, CANVAS_HEIGHT - 10 * SCALE_FACTOR);
+}
+
+/**
  * Render active game screen
  */
 interface GameRenderProps {
@@ -223,6 +330,9 @@ interface GameRenderProps {
   gameStarted: boolean;
   gameOver: boolean;
   isPaused: boolean;
+  difficulty: Difficulty;
+  obstacles: Obstacle[];
+  scorePopups: ScorePopup[];
   cellWidth: number;
   cellHeight: number;
   colors: {
@@ -237,7 +347,7 @@ function renderGameScreen(
   ctx: CanvasRenderingContext2D,
   props: GameRenderProps
 ): void {
-  const { snake, food, score, gameStarted, gameOver, isPaused, cellWidth, cellHeight, colors } = props;
+  const { snake, food, score, gameStarted, gameOver, isPaused, difficulty, obstacles, scorePopups, cellWidth, cellHeight, colors } = props;
   const { background, light, dark, darkest } = colors;
 
   // Draw grid pattern (subtle, scaled line width)
@@ -279,6 +389,66 @@ function renderGameScreen(
     );
   });
 
+  // Draw obstacles as retro brick/wall blocks with 3D pixel art effect
+  obstacles.forEach((obstacle) => {
+    const x = obstacle.x * cellWidth;
+    const y = obstacle.y * cellHeight;
+    const pad = 1 * SCALE_FACTOR;
+    const w = cellWidth - pad * 2;
+    const h = cellHeight - pad * 2;
+
+    // Main brick body (dark)
+    ctx.fillStyle = darkest;
+    ctx.fillRect(x + pad, y + pad, w, h);
+
+    // 3D highlight effect (top and left edges - lighter)
+    ctx.fillStyle = dark;
+    ctx.fillRect(x + pad, y + pad, w, 2 * SCALE_FACTOR); // Top edge
+    ctx.fillRect(x + pad, y + pad, 2 * SCALE_FACTOR, h); // Left edge
+
+    // 3D shadow effect (bottom and right edges - darkest)
+    ctx.fillStyle = '#050a05';
+    ctx.fillRect(x + pad, y + h - 1 * SCALE_FACTOR, w, 2 * SCALE_FACTOR); // Bottom edge
+    ctx.fillRect(x + w - 1 * SCALE_FACTOR, y + pad, 2 * SCALE_FACTOR, h); // Right edge
+
+    // Inner brick pattern (cross/X mark for danger)
+    ctx.strokeStyle = dark;
+    ctx.lineWidth = 1.5 * SCALE_FACTOR;
+    ctx.beginPath();
+    // X pattern
+    const inset = 4 * SCALE_FACTOR;
+    ctx.moveTo(x + pad + inset, y + pad + inset);
+    ctx.lineTo(x + w - inset, y + h - inset);
+    ctx.moveTo(x + w - inset, y + pad + inset);
+    ctx.lineTo(x + pad + inset, y + h - inset);
+    ctx.stroke();
+  });
+
+  // Draw score popups (floating "+10" text)
+  const now = Date.now();
+  scorePopups.forEach((popup) => {
+    const elapsed = now - popup.startTime;
+    const progress = elapsed / EFFECTS.scorePopupDuration;
+
+    if (progress < 1) {
+      // Fade out and float up
+      const alpha = 1 - progress;
+      const offsetY = progress * 20 * SCALE_FACTOR;
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = darkest;
+      ctx.font = `bold ${8 * SCALE_FACTOR}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillText(
+        `+${popup.value}`,
+        popup.x * cellWidth + cellWidth / 2,
+        popup.y * cellHeight - offsetY
+      );
+      ctx.restore();
+    }
+  });
+
   // Start screen (scaled) - dark overlay with light text
   if (!gameStarted && !gameOver) {
     renderOverlay(ctx, darkest, 0.85);
@@ -313,14 +483,22 @@ function renderGameScreen(
     ctx.fillStyle = background;
     ctx.font = `bold ${12 * SCALE_FACTOR}px monospace`;
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20 * SCALE_FACTOR);
+    ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 30 * SCALE_FACTOR);
+
+    // Show difficulty
+    const diffConfig = DIFFICULTY_LEVELS[difficulty];
+    ctx.font = `${7 * SCALE_FACTOR}px monospace`;
+    ctx.fillStyle = light;
+    ctx.fillText(`Mode: ${diffConfig.name}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 15 * SCALE_FACTOR);
+
+    ctx.fillStyle = background;
     ctx.font = `${10 * SCALE_FACTOR}px monospace`;
-    ctx.fillText(`Score: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    ctx.fillText(`Score: ${score}`, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 2 * SCALE_FACTOR);
     ctx.font = `${8 * SCALE_FACTOR}px monospace`;
     ctx.fillText('A = Rejouer', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 20 * SCALE_FACTOR);
     ctx.font = `${7 * SCALE_FACTOR}px monospace`;
     ctx.fillStyle = light;
-    ctx.fillText('SELECT = Reset', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 35 * SCALE_FACTOR);
+    ctx.fillText('SELECT = Menu', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 + 35 * SCALE_FACTOR);
   }
 }
 
