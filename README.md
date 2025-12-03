@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nuit de l'Info 2025 - Challenge #483: Hidden Snake Game
 
-## Getting Started
+> **Defi #483** - Un jeu Snake cache dans une interface retro gaming
 
-First, run the development server:
+## Le Concept
+
+Ce projet est une boutique de jeux retro fictive **"RetroCollect"** avec un secret: une cartouche mysterieuse (#483) qui revele un jeu Snake cache lorsqu'elle est inseree dans la console GameBoy interactive.
+
+## Comment Trouver le Secret
+
+1. Visitez la section **"Le Coffre-Fort"** (Boutique)
+2. Reperer la cartouche mysterieuse **"??? #483"** avec le label "NON DISPONIBLE"
+3. **Glissez-deposez** la cartouche vers la console GameBoy
+4. Le jeu Snake secret se lance!
+
+## Tech Stack
+
+| Technologie | Version |
+|-------------|---------|
+| Next.js | 16.0.6 |
+| React | 19.2.0 |
+| TypeScript | 5 |
+| Tailwind CSS | 4 |
+| Framer Motion | 12 |
+| shadcn/ui | new-york |
+
+## Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+# Cloner le repo
+git clone https://github.com/ahmed-abdat/nuit_de_linfo_hidden_snak_gam_challange.git
+
+# Installer les dependances
+pnpm install
+
+# Lancer le serveur de developpement
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ouvrir [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Structure du Projet
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/                 # Routes et pages Next.js
+├── components/
+│   ├── GameBoy.tsx      # Console GameBoy interactive
+│   ├── SnakeGame.tsx    # Le jeu Snake cache
+│   ├── Cartridge.tsx    # Cartouches draggables
+│   └── ui/              # Composants shadcn/ui
+├── hooks/               # Hooks React personnalises
+└── lib/                 # Utilitaires
+```
 
-## Learn More
+## Fonctionnalites
 
-To learn more about Next.js, take a look at the following resources:
+- Interface de boutique retro gaming elegante
+- Console GameBoy interactive avec ecran fonctionnel
+- Systeme drag-and-drop pour inserer les cartouches
+- Jeu Snake complet avec:
+  - Controles clavier (fleches directionnelles)
+  - Systeme de score
+  - Sauvegarde du meilleur score (localStorage)
+  - Detection de collision
+- Animations fluides avec Framer Motion
+- Design responsive (mobile-first)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Nuit de l'Info 2025
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Ce projet a ete developpe dans le cadre de la **Nuit de l'Info 2025**, une competition de developpement web qui se deroule sur une nuit entiere.
 
-## Deploy on Vercel
+**Challenge #483**: Creer une experience de jeu cachee dans une interface web apparemment normale.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Licence
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
