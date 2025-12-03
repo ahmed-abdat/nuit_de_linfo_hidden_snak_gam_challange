@@ -90,8 +90,8 @@ export const TIMING = {
   bootPhase1Delay: 300,
   bootPhase2Delay: 800,
   bootCompleteDelay: 1500,
-  buttonFeedbackDuration: 100,
-  screenShakeDuration: 500,
+  buttonFeedbackDuration: 150, // Increased for better visual feedback
+  screenShakeDuration: 400,
 } as const;
 
 // Initial game state

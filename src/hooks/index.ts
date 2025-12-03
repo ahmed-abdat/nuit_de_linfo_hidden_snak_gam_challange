@@ -20,3 +20,4 @@ export {
   resetQualityLevel,
   type QualityLevel,
 } from './usePerformanceMonitor';
+export { useVisibilityPause } from './useVisibilityPause';
