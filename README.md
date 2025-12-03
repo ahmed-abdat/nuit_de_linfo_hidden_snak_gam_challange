@@ -1,10 +1,10 @@
 # Nuit de l'Info 2025 - Challenge #483: Hidden Snake Game
 
-> **Defi #483** - Un jeu Snake cache dans une interface retro gaming
+> **Defi #483** - *"Cachez au sein de votre site un jeu de snake"*
 
 ## Le Concept
 
-Ce projet est une boutique de jeux retro fictive **"RetroCollect"** avec un secret: une cartouche mysterieuse (#483) qui revele un jeu Snake cache lorsqu'elle est inseree dans la console GameBoy interactive.
+Notre solution: une boutique de jeux retro fictive **"RetroCollect"** avec un secret. Parmi les cartouches en vente, une cartouche mysterieuse (#483) revele un jeu Snake cache lorsqu'elle est inseree dans la console GameBoy interactive.
 
 ## Comment Trouver le Secret
 
@@ -70,7 +70,7 @@ src/
 
 Ce projet a ete developpe dans le cadre de la **Nuit de l'Info 2025**, une competition de developpement web qui se deroule sur une nuit entiere.
 
-**Challenge #483**: Creer une experience de jeu cachee dans une interface web apparemment normale.
+**Challenge #483**: *"Cachez au sein de votre site un jeu de snake"*
 
 ## Licence
 
