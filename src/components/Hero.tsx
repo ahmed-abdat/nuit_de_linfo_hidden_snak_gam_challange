@@ -3,6 +3,15 @@ import { motion } from 'framer-motion';
 import { GameBoy } from './GameBoy';
 import { ChevronDown, Gamepad2, Zap, Trophy } from 'lucide-react';
 
+// Pre-generate random positions for background elements (deterministic for SSR)
+const BACKGROUND_PARTICLES = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  left: ((i * 17 + 31) % 100), // Pseudo-random but deterministic
+  top: ((i * 23 + 47) % 100),
+  duration: 3 + ((i * 13) % 20) / 10,
+  delay: ((i * 7) % 20) / 10,
+}));
+
 export function Hero() {
   return (
     <section className="relative min-h-screen pt-24 pb-16 overflow-hidden">
@@ -11,22 +20,22 @@ export function Hero() {
 
       {/* Animated Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
+        {BACKGROUND_PARTICLES.map((particle) => (
           <motion.div
-            key={i}
+            key={particle.id}
             className="absolute w-4 h-4 bg-[#9bbc0f]/20 rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: `${particle.left}%`,
+              top: `${particle.top}%`,
             }}
             animate={{
               y: [0, -30, 0],
               opacity: [0.2, 0.5, 0.2],
             }}
             transition={{
-              duration: 3 + Math.random() * 2,
+              duration: particle.duration,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              delay: particle.delay,
             }}
           />
         ))}

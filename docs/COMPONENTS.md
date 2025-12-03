@@ -2,8 +2,20 @@
 
 This document provides usage examples for all installed UI components.
 
+> **See also:** [React Bits Components](./REACT-BITS.md) for additional animation and effect components.
+
+## Registries Overview
+
+| Registry | Components | Best For |
+|----------|------------|----------|
+| `@shadcn` | Base UI components | Buttons, inputs, dialogs |
+| `@magicui` | Smooth Cursor, Highlighter | Cursor effects, text highlights |
+| `@aceternity` | Cards, Modals, Effects | 3D cards, modals, glowing effects |
+| `@react-bits` | 20+ components | Backgrounds, text animations, interactions |
+
 ## Table of Contents
 
+### Aceternity & Magic UI Components
 1. [Smooth Cursor](#smooth-cursor)
 2. [Highlighter](#highlighter)
 3. [Comet Card](#comet-card)
@@ -14,6 +26,14 @@ This document provides usage examples for all installed UI components.
 8. [Animated Modal](#animated-modal)
 9. [Glowing Effect](#glowing-effect)
 10. [Pixelated Canvas](#pixelated-canvas)
+
+### React Bits Components (see [REACT-BITS.md](./REACT-BITS.md))
+- **Backgrounds:** Dither, Aurora, DotGrid, Waves, Squares, Noise, Particles
+- **Text Animations:** CountUp, SplitText, TextType, Shuffle, BlurText, TrueFocus, ASCIIText
+- **Content:** FadeContent, AnimatedContent
+- **Effects:** GlareHover, Magnet, ClickSpark
+- **Cards:** PixelCard, DecayCard, Stack
+- **UI:** LogoLoop, Stepper
 
 ---
 

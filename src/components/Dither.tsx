@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, forwardRef } from 'react';
+import { useRef, useEffect, forwardRef } from 'react';
 import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
 import { EffectComposer, wrapEffect } from '@react-three/postprocessing';
 import { Effect } from 'postprocessing';
@@ -60,7 +60,8 @@ float cnoise(vec2 P) {
   return 2.3 * mix(n_x.x, n_x.y, fade_xy.y);
 }
 
-const int OCTAVES = 4;
+// Reduced from 4 to 2 octaves for better performance
+const int OCTAVES = 2;
 float fbm(vec2 p) {
   float value = 0.0;
   float amp = 1.0;
@@ -132,9 +133,9 @@ void mainImage(in vec4 inputColor, in vec2 uv, out vec4 outputColor) {
 `;
 
 class RetroEffectImpl extends Effect {
-  public uniforms: Map<string, THREE.Uniform<any>>;
+  public uniforms: Map<string, THREE.Uniform<number>>;
   constructor() {
-    const uniforms = new Map<string, THREE.Uniform<any>>([
+    const uniforms = new Map<string, THREE.Uniform<number>>([
       ['colorNum', new THREE.Uniform(4.0)],
       ['pixelSize', new THREE.Uniform(2.0)]
     ]);
@@ -155,16 +156,18 @@ class RetroEffectImpl extends Effect {
   }
 }
 
+// Wrap the effect outside of render to avoid creating new components during render
+const WrappedRetroEffect = wrapEffect(RetroEffectImpl);
+
 const RetroEffect = forwardRef<RetroEffectImpl, { colorNum: number; pixelSize: number }>((props, ref) => {
   const { colorNum, pixelSize } = props;
-  const WrappedRetroEffect = wrapEffect(RetroEffectImpl);
   return <WrappedRetroEffect ref={ref} colorNum={colorNum} pixelSize={pixelSize} />;
 });
 
 RetroEffect.displayName = 'RetroEffect';
 
 interface WaveUniforms {
-  [key: string]: THREE.Uniform<any>;
+  [key: string]: THREE.Uniform<number | THREE.Vector2 | THREE.Color>;
   time: THREE.Uniform<number>;
   resolution: THREE.Uniform<THREE.Vector2>;
   waveSpeed: THREE.Uniform<number>;
@@ -261,11 +264,13 @@ function DitheredWaves({
     <>
       <mesh ref={mesh} scale={[viewport.width, viewport.height, 1]}>
         <planeGeometry args={[1, 1]} />
+{/* eslint-disable react-hooks/refs -- Three.js R3F pattern requires passing uniforms ref */}
         <shaderMaterial
           vertexShader={waveVertexShader}
           fragmentShader={waveFragmentShader}
           uniforms={waveUniformsRef.current}
         />
+{/* eslint-enable react-hooks/refs */}
       </mesh>
 
       <EffectComposer>

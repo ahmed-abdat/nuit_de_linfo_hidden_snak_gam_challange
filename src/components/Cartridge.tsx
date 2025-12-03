@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useMotionValue, useSpring, useTransform, PanInfo } from 'framer-motion';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useSyncExternalStore } from 'react';
 import { cn } from '@/lib/utils';
 
 interface CartridgeProps {
@@ -12,12 +12,24 @@ interface CartridgeProps {
   description: string;
   color: string;
   labelColor: string;
-  isSecret?: boolean;
+  isCompatible?: boolean;
   isInserted?: boolean;
   onDragStart?: () => void;
   onDrag?: (x: number, y: number) => void;
   onDragEnd?: (x: number, y: number) => void;
   onTap?: () => void;
+}
+
+// Check for mobile using useSyncExternalStore for hydration safety
+const emptySubscribe = () => () => {};
+const getIsMobileSnapshot = () => {
+  if (typeof window === 'undefined') return false;
+  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+};
+const getServerSnapshot = () => false;
+
+function useIsMobile() {
+  return useSyncExternalStore(emptySubscribe, getIsMobileSnapshot, getServerSnapshot);
 }
 
 export function Cartridge({
@@ -28,7 +40,7 @@ export function Cartridge({
   description,
   color,
   labelColor,
-  isSecret = false,
+  isCompatible = false,
   isInserted = false,
   onDragStart,
   onDrag,
@@ -36,13 +48,9 @@ export function Cartridge({
   onTap,
 }: CartridgeProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const [isHovering, setIsHovering] = useState(false);
-
-  // Detect mobile
-  useEffect(() => {
-    setIsMobile('ontouchstart' in window || navigator.maxTouchPoints > 0);
-  }, []);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Motion values for 3D effect
   const mouseX = useMotionValue(0);
@@ -81,52 +89,60 @@ export function Cartridge({
   };
 
   const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (onDragEnd) {
-      onDragEnd(info.point.x, info.point.y);
-    }
+    setIsDragging(false);
+    onDragEnd?.(info.point.x, info.point.y);
     document.body.style.cursor = 'default';
   };
 
-  // Don't render if inserted
-  if (isInserted) {
-    return null;
-  }
-
+  // Keep in DOM to prevent layout shift, but visually indicate insertion
   return (
-    <motion.div
-      ref={cardRef}
-      drag={!isMobile}
-      dragSnapToOrigin
-      dragMomentum={false}
-      dragElastic={0.1}
-      onDragStart={() => {
-        document.body.style.cursor = 'grabbing';
-        onDragStart?.();
-      }}
-      onDrag={handleDrag}
-      onDragEnd={handleDragEnd}
-      onClick={() => {
-        if (isMobile) {
-          onTap?.();
-        }
-      }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      onMouseEnter={() => setIsHovering(true)}
-      whileHover={!isMobile ? { scale: 1.05, y: -8 } : undefined}
-      whileDrag={{ scale: 1.1, zIndex: 100, rotate: 2 }}
-      whileTap={isMobile ? { scale: 0.95 } : undefined}
-      style={{
-        rotateX: !isMobile ? rotateX : 0,
-        rotateY: !isMobile ? rotateY : 0,
-      }}
-      className={cn(
-        'relative w-[120px] md:w-[140px] cursor-grab active:cursor-grabbing select-none',
-        '[perspective:1000px] transform-gpu',
-        isSecret && 'animate-pulse-subtle'
-      )}
+    // Parent wrapper with perspective (not on draggable element to avoid transform conflicts)
+    <div
+      className="relative w-[120px] md:w-[140px] h-[140px] md:h-[160px]"
+      style={{ perspective: '1000px' }}
     >
-      {/* Cartridge Body */}
+      <motion.div
+        ref={cardRef}
+        data-cartridge-id={id}
+        drag={!isInserted}
+        dragSnapToOrigin
+        dragMomentum={false}
+        dragElastic={0.1}
+        onDragStart={() => {
+          document.body.style.cursor = 'grabbing';
+          setIsDragging(true);
+          setIsHovering(false); // Hide tooltip during drag
+          onDragStart?.();
+        }}
+        onDrag={handleDrag}
+        onDragEnd={handleDragEnd}
+        onClick={() => {
+          // Allow click on both mobile and desktop
+          // On desktop, this provides a fallback if drag doesn't work
+          onTap?.();
+        }}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        onMouseEnter={() => setIsHovering(true)}
+        whileHover={!isInserted ? { scale: 1.05, y: -8 } : undefined}
+        whileDrag={!isInserted ? { scale: 1.1, zIndex: 100, rotate: 2 } : undefined}
+        whileTap={!isInserted ? { scale: 0.95 } : undefined}
+        animate={{
+          opacity: isInserted ? 0.3 : 1,
+          scale: isInserted ? 0.9 : 1,
+          y: isInserted ? 5 : 0,
+        }}
+        transition={{ duration: 0.3 }}
+        style={{
+          rotateX,
+          rotateY,
+        }}
+        className={cn(
+          'relative w-full h-full cursor-grab active:cursor-grabbing select-none',
+          'transform-gpu will-change-transform'
+        )}
+      >
+      {/* Cartridge Body - No hints about which one works! The snake game is HIDDEN */}
       <div
         className="relative rounded-t-md rounded-b-lg shadow-xl overflow-hidden"
         style={{ backgroundColor: color }}
@@ -143,33 +159,9 @@ export function Cartridge({
           className="mx-2 mt-5 mb-3 p-2 rounded-sm relative overflow-hidden"
           style={{ backgroundColor: labelColor }}
         >
-          {/* Secret cartridge glitch effect */}
-          {isSecret && (
-            <>
-              <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiMwMDAiIGZpbGwtb3BhY2l0eT0iMC4xIi8+PC9zdmc+')] opacity-50" />
-              <motion.div
-                animate={{
-                  opacity: [0.1, 0.3, 0.1],
-                  x: [0, 2, -2, 0],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: 'reverse',
-                }}
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-              />
-            </>
-          )}
-
           {/* Game Title */}
           <div className="relative text-center">
-            <div
-              className={cn(
-                'font-bold text-xs md:text-sm text-white drop-shadow-sm',
-                isSecret && 'font-mono animate-glitch'
-              )}
-            >
+            <div className="font-bold text-xs md:text-sm text-white drop-shadow-sm">
               {title}
             </div>
             <div className="text-[8px] md:text-[10px] text-white/80 mt-0.5">
@@ -188,29 +180,24 @@ export function Cartridge({
 
       {/* Price Tag */}
       <div className="mt-2 text-center">
-        <div
-          className={cn(
-            'text-xs font-semibold',
-            isSecret ? 'text-amber-400' : 'text-gray-300'
-          )}
-        >
+        <div className="text-xs font-semibold text-gray-300">
           {price}
         </div>
       </div>
 
-      {/* Hover tooltip */}
-      {isHovering && !isMobile && (
+      </motion.div>
+
+      {/* Hover tooltip - OUTSIDE motion.div to avoid 3D transform issues */}
+      {isHovering && !isMobile && !isDragging && (
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute -bottom-16 left-1/2 -translate-x-1/2 bg-white text-gray-900 text-xs p-2 rounded-lg shadow-lg whitespace-nowrap z-50"
+          className="absolute top-full mt-2 left-1/2 -translate-x-1/2 bg-white text-gray-900 text-xs p-2 rounded-lg shadow-lg whitespace-nowrap z-50 pointer-events-none"
         >
-          <p className="font-medium">{isSecret ? 'Inserez a vos risques...' : description}</p>
-          {!isSecret && (
-            <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rotate-45" />
-          )}
+          <p className="font-medium">{description}</p>
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rotate-45" />
         </motion.div>
       )}
-    </motion.div>
+    </div>
   );
 }

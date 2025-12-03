@@ -1,6 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function Header() {
   return (
@@ -12,13 +13,15 @@ export function Header() {
     >
       <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-[#9bbc0f] to-[#306230] rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">GB</span>
-          </div>
-          <span className="font-bold text-xl">
-            Retro<span className="text-[#306230]">Snake</span>
-          </span>
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/retro_logo.webp"
+            alt="RetroCollect"
+            width={220}
+            height={60}
+            className="h-14 w-auto"
+            priority
+          />
         </Link>
 
         {/* Navigation Links */}

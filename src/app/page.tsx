@@ -1,154 +1,111 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { GameBoy } from '@/components/GameBoy';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
   ArrowRight,
+  Gamepad2,
   Shield,
-  Clock,
-  Wrench,
+  Zap,
   Menu,
   X,
-  Search
+  Trophy,
+  Star,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Cartridge } from '@/components/Cartridge';
+import { CoffreFortSection } from '@/components/sections/CoffreFortSection';
+import BlurText from '@/components/BlurText';
+import CountUp from '@/components/CountUp';
+import RetroGrid from '@/components/RetroGrid';
 
-// Cartridge data
-const cartridges = [
-  {
-    id: 'zelda',
-    title: 'ZELDA',
-    subtitle: 'Gold Edition',
-    price: '189€',
-    description: 'Cartouche doree originale de 1987',
-    color: '#d4a574',
-    labelColor: '#8b6914',
-  },
-  {
-    id: 'mario',
-    title: 'MARIO',
-    subtitle: 'Bros. 3',
-    price: '74€',
-    description: 'Le jeu de plateforme NES definitif',
-    color: '#4a4a4a',
-    labelColor: '#e53935',
-  },
-  {
-    id: 'metroid',
-    title: 'METROID',
-    subtitle: '1st Print',
-    price: '156€',
-    description: 'Premier tirage de 1986',
-    color: '#4a4a4a',
-    labelColor: '#7b1fa2',
-  },
-  {
-    id: 'prototype-483',
-    title: '???',
-    subtitle: '#483',
-    price: 'NON DISPONIBLE',
-    description: 'Origine: Inconnue. Contenu: Non verifie.',
-    color: '#1e293b',
-    labelColor: '#0f172a',
-    isSecret: true,
-  },
-];
+const PixelCard = dynamic(() => import('@/components/PixelCard'), { ssr: false });
+import { products, collections, galleryItems, reviews } from '@/data/products';
+import { CircularGallery } from '@/components/CircularGallery2';
+import { TestimonialSlider } from '@/components/TestimonialSlider';
+import Dither from '@/components/Dither';
+import Squares from '@/components/Squares';
+import Shuffle from '@/components/Shuffle';
+import ClickSpark from '@/components/ClickSpark';
+import Noise from '@/components/Noise';
+import Magnet from '@/components/Magnet';
+import FooterSection from '@/components/FooterOne';
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [activeCartridge, setActiveCartridge] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isNearDropZone, setIsNearDropZone] = useState(false);
-  const dropZoneRef = useRef<HTMLDivElement>(null);
-
-  // Handle cartridge insertion
-  const handleCartridgeInsert = useCallback((cartridgeId: string) => {
-    setActiveCartridge(cartridgeId);
-    setIsDragging(false);
-    setIsNearDropZone(false);
-  }, []);
-
-  // Handle cartridge eject
-  const handleCartridgeEject = useCallback(() => {
-    setActiveCartridge(null);
-  }, []);
-
-  // Check if point is near drop zone
-  const checkNearDropZone = useCallback((x: number, y: number) => {
-    if (!dropZoneRef.current) return false;
-    const rect = dropZoneRef.current.getBoundingClientRect();
-    const threshold = 100;
-    return (
-      x >= rect.left - threshold &&
-      x <= rect.right + threshold &&
-      y >= rect.top - threshold &&
-      y <= rect.bottom + threshold
-    );
-  }, []);
-
-  // Check if point is inside drop zone
-  const checkInsideDropZone = useCallback((x: number, y: number) => {
-    if (!dropZoneRef.current) return false;
-    const rect = dropZoneRef.current.getBoundingClientRect();
-    return (
-      x >= rect.left &&
-      x <= rect.right &&
-      y >= rect.top &&
-      y <= rect.bottom
-    );
-  }, []);
 
   return (
-    <main className="min-h-screen bg-[#faf9f6] text-[#1a1a1a]">
+    <main className="dark min-h-screen bg-background text-foreground overflow-hidden">
+      {/* Dither Background - GameBoy Green aesthetic */}
+      <div className="fixed inset-0 z-0 opacity-30">
+        <Dither
+          waveColor={[0.06, 0.78, 0.64]}
+          waveSpeed={0.03}
+          waveFrequency={2}
+          waveAmplitude={0.4}
+          colorNum={4}
+          pixelSize={3}
+          enableMouseInteraction={true}
+          mouseRadius={0.8}
+        />
+      </div>
+
+      {/* RetroGrid overlay */}
+      <div className="fixed inset-0 z-0 opacity-50">
+        <RetroGrid />
+      </div>
+
+      {/* CRT Noise overlay */}
+      <div className="fixed inset-0 z-[1] pointer-events-none opacity-[0.03]">
+        <Noise patternAlpha={8} patternRefreshInterval={3} />
+      </div>
+
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-slate-900/90 backdrop-blur-md border-b border-slate-700/50">
         <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center shadow-sm border border-emerald-500/50">
-              <span className="font-mono font-extrabold text-white tracking-tighter text-lg">
-                R<span className="text-emerald-200">C</span>
-              </span>
-            </div>
-            <span className="font-bold text-xl text-neutral-900 tracking-tight">
-              RetroCollect
-            </span>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/retro_logo.webp"
+              alt="RetroCollect"
+              width={220}
+              height={60}
+              className="h-14 w-auto"
+              priority
+            />
           </Link>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="#collection" className="text-gray-600 hover:text-[#1a1a1a] transition-colors text-sm font-medium">
+            <Link href="#coffre-fort" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">
               Boutique
             </Link>
-            <Link href="#collections" className="text-gray-600 hover:text-[#1a1a1a] transition-colors text-sm font-medium">
+            <Link href="#collections" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">
               Collections
             </Link>
-            <Link href="#restauration" className="text-gray-600 hover:text-[#1a1a1a] transition-colors text-sm font-medium">
+            <Link href="#restauration" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">
               Restauration
             </Link>
-            <Link href="#apropos" className="text-gray-600 hover:text-[#1a1a1a] transition-colors text-sm font-medium">
-              A Propos
+            <Link href="#a-propos" className="text-slate-400 hover:text-white transition-colors text-sm font-medium">
+              À Propos
             </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-4">
-            <button className="text-gray-600 hover:text-[#1a1a1a] transition-colors p-2">
-              <Search size={20} />
-            </button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="bg-[#1a1a1a] text-white px-5 py-2.5 rounded-full text-sm font-medium hover:bg-[#333] transition-colors"
-            >
-              Connexion
-            </motion.button>
+            <Magnet padding={40} magnetStrength={4}>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="bg-cyan-500 hover:bg-cyan-400 text-white px-5 py-2.5 rounded-full text-sm font-medium transition-colors shadow-md shadow-cyan-500/20"
+              >
+                Connexion
+              </motion.button>
+            </Magnet>
           </div>
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2"
+            className="md:hidden p-2 text-white"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -162,14 +119,14 @@ export default function Home() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white border-b border-gray-100"
+              className="md:hidden bg-slate-900/95 backdrop-blur-md border-b border-slate-700/50"
             >
               <div className="px-6 py-4 flex flex-col gap-4">
-                <Link href="#collection" className="text-gray-600 py-2">Boutique</Link>
-                <Link href="#collections" className="text-gray-600 py-2">Collections</Link>
-                <Link href="#restauration" className="text-gray-600 py-2">Restauration</Link>
-                <Link href="#apropos" className="text-gray-600 py-2">A Propos</Link>
-                <button className="bg-[#1a1a1a] text-white px-5 py-3 rounded-full text-sm font-medium">
+                <Link href="#coffre-fort" className="text-slate-300 py-2 hover:text-white transition-colors">Boutique</Link>
+                <Link href="#collections" className="text-slate-300 py-2 hover:text-white transition-colors">Collections</Link>
+                <Link href="#restauration" className="text-slate-300 py-2 hover:text-white transition-colors">Restauration</Link>
+                <Link href="#a-propos" className="text-slate-300 py-2 hover:text-white transition-colors">À Propos</Link>
+                <button className="bg-cyan-500 hover:bg-cyan-400 text-white px-5 py-3 rounded-full text-sm font-medium mt-2 transition-colors">
                   Connexion
                 </button>
               </div>
@@ -178,307 +135,268 @@ export default function Home() {
         </AnimatePresence>
       </header>
 
-      {/* Hero Section */}
-      <section className="relative min-h-screen pt-24 overflow-hidden bg-gradient-to-b from-white to-[#f5f4f0]">
-        {/* Subtle grid pattern */}
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(0,0,0,0.015)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.015)_1px,transparent_1px)] bg-[size:60px_60px]" />
-
-        <div className="relative z-10 max-w-7xl mx-auto px-6 pt-16 md:pt-24">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left - Text */}
+      {/* Hero Section - Gaming Focused */}
+      <section className="relative min-h-screen pt-24 sm:pt-28 md:pt-32 pb-12 md:pb-20 flex items-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            {/* Left - Animated Text */}
             <div className="max-w-xl">
+              {/* Badge */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium mb-6 border border-emerald-100"
+                className="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold mb-4 sm:mb-6 md:mb-8"
               >
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                Depuis 2024 - Collection Retro Curee
+                <motion.span
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 2 }}
+                  className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-cyan-400 rounded-full"
+                />
+                INSEREZ UNE PIECE
               </motion.div>
 
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight mb-6"
-              >
-                Revivez
-                <span className="block text-emerald-600">l&apos;Ere Retro</span>
-              </motion.h1>
+              {/* Animated Title with BlurText */}
+              <div className="mb-4 sm:mb-6">
+                <BlurText
+                  text="ELEVEZ"
+                  className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent"
+                  delay={40}
+                  animateBy="letters"
+                  direction="bottom"
+                  threshold={0.01}
+                />
+                <BlurText
+                  text="VOTRE COLLECTION"
+                  className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white mt-1 sm:mt-2"
+                  delay={60}
+                  animateBy="words"
+                  direction="bottom"
+                  threshold={0.01}
+                />
+              </div>
 
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-lg text-gray-600 mb-8 leading-relaxed"
+                transition={{ delay: 0.4 }}
+                className="text-sm sm:text-base md:text-lg text-slate-400 mb-6 sm:mb-8 leading-relaxed"
               >
-                Jeux vintage premium, authentifies et restaures avec soin.
-                Chaque cartouche raconte une histoire - nous nous assurons
-                qu&apos;elle fonctionne parfaitement.
+                Jeux vintage premium, authentifiés et restaurés avec passion.
+                Découvrez le <span className="text-cyan-400 font-semibold">secret caché</span> dans notre console interactive.
               </motion.p>
 
+              {/* CTAs with Magnet + ClickSpark */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex flex-wrap gap-4 mb-10"
+                transition={{ delay: 0.5 }}
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-8 sm:mb-12"
               >
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center gap-2 bg-[#1a1a1a] text-white px-7 py-4 rounded-full font-medium hover:bg-[#333] transition-colors"
-                >
-                  Parcourir la Collection
-                  <ArrowRight size={18} />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center gap-2 border-2 border-gray-200 text-[#1a1a1a] px-7 py-4 rounded-full font-medium hover:border-gray-300 hover:bg-gray-50 transition-colors"
-                >
-                  Notre Processus
-                </motion.button>
+                <Magnet padding={40} magnetStrength={2}>
+                  <ClickSpark sparkColor="#06b6d4" sparkCount={10} sparkRadius={40} duration={400}>
+                    <motion.a
+                      href="#coffre-fort"
+                      whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(6, 182, 212, 0.4)' }}
+                      whileTap={{ scale: 0.95 }}
+                      className="inline-flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-colors shadow-lg shadow-cyan-500/20"
+                    >
+                      <Gamepad2 size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      Jouer Maintenant
+                    </motion.a>
+                  </ClickSpark>
+                </Magnet>
+                <Magnet padding={40} magnetStrength={2}>
+                  <ClickSpark sparkColor="#94a3b8" sparkCount={8} sparkRadius={35} duration={400}>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="inline-flex items-center justify-center gap-2 border border-slate-600 text-slate-300 hover:text-white hover:border-cyan-500/50 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-colors"
+                    >
+                      Explorer
+                      <ArrowRight size={14} className="sm:w-4 sm:h-4" />
+                    </motion.button>
+                  </ClickSpark>
+                </Magnet>
               </motion.div>
 
-              {/* Stats */}
+              {/* Animated Stats */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="flex items-center gap-8"
+                transition={{ delay: 0.7 }}
+                className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 md:gap-10"
               >
-                <div>
-                  <div className="text-2xl font-bold text-[#1a1a1a]">500+</div>
-                  <div className="text-sm text-gray-500">Jeux Restaures</div>
-                </div>
-                <div className="w-px h-10 bg-gray-200" />
-                <div>
-                  <div className="text-2xl font-bold text-[#1a1a1a]">100%</div>
-                  <div className="text-sm text-gray-500">Authenticite</div>
-                </div>
-                <div className="w-px h-10 bg-gray-200" />
-                <div>
-                  <div className="text-2xl font-bold text-[#1a1a1a]">90j</div>
-                  <div className="text-sm text-gray-500">Garantie</div>
-                </div>
+                {[
+                  { value: 500, suffix: '+', label: 'Jeux', icon: Gamepad2 },
+                  { value: 100, suffix: '%', label: 'Authentiques', icon: Shield },
+                  { value: 4.9, label: 'Avis', icon: Star, decimals: 1 },
+                ].map((stat, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 + index * 0.1 }}
+                    className="text-center flex-1 sm:flex-none"
+                  >
+                    <div className="flex items-center justify-center gap-0.5 sm:gap-1 text-xl sm:text-2xl md:text-3xl font-black text-white">
+                      <CountUp
+                        to={stat.value}
+                        duration={2}
+                      />
+                      {stat.suffix && <span className="text-cyan-400">{stat.suffix}</span>}
+                    </div>
+                    <div className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-wider mt-0.5 sm:mt-1">
+                      {stat.label}
+                    </div>
+                  </motion.div>
+                ))}
               </motion.div>
             </div>
 
-            {/* Right - Hero Image */}
+            {/* Right - Animated 3D Gallery */}
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4, duration: 0.8 }}
-              className="flex justify-center lg:justify-end"
+              transition={{ delay: 0.3, duration: 0.8 }}
+              className="hidden lg:block h-[500px] relative"
             >
-              <div className="relative">
-                {/* Decorative elements */}
-                <div className="absolute -top-8 -left-8 w-32 h-32 bg-pink-200 rounded-full blur-3xl opacity-60" />
-                <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-cyan-200 rounded-full blur-3xl opacity-60" />
+              {/* Glow effects */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cyan-500/20 rounded-full blur-[100px]" />
+              <div className="absolute top-1/3 right-1/4 w-40 h-40 bg-cyan-400/15 rounded-full blur-[80px]" />
 
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="relative"
-                >
-                  <Image
-                    src="/assets/1.PNG"
-                    alt="Game Boy Retro"
-                    width={400}
-                    height={500}
-                    className="drop-shadow-2xl"
-                    priority
-                  />
-                </motion.div>
-              </div>
+              <CircularGallery
+                items={galleryItems}
+                bend={3}
+                borderRadius={0.05}
+                scrollSpeed={2}
+              />
             </motion.div>
           </div>
         </div>
+
       </section>
 
-      {/* Interactive Shelf Section - THE CHALLENGE */}
-      <section id="collection" className="py-24 bg-gradient-to-b from-neutral-900 to-neutral-800">
-        <div className="max-w-7xl mx-auto px-6">
+      {/* Features Bento Grid */}
+      <section id="restauration" className="relative z-10 py-24 overflow-hidden">
+        {/* Animated Squares Background */}
+        <div className="absolute inset-0 opacity-30">
+          <Squares
+            direction="diagonal"
+            speed={0.3}
+            borderColor="rgba(6, 182, 212, 0.3)"
+            squareSize={50}
+            hoverFillColor="rgba(6, 182, 212, 0.1)"
+          />
+        </div>
+        <div className="relative max-w-7xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center max-w-2xl mx-auto mb-12"
+            className="text-center max-w-2xl mx-auto mb-16"
           >
-            <span className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">
-              Testez Avant d&apos;Acheter
+            <span className="text-sm font-bold text-cyan-400 uppercase tracking-wider">
+              Pourquoi Nous Choisir
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold mt-4 mb-4 tracking-tight text-white">
-              Le Coffre-Fort
+            <h2 className="text-3xl md:text-5xl font-black mt-4 mb-4 tracking-tight">
+              <Shuffle
+                text="GAMING PREMIUM"
+                className="bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent text-3xl md:text-5xl font-black"
+                shuffleTimes={2}
+                duration={0.4}
+                stagger={0.02}
+                colorFrom="#06b6d4"
+                colorTo="#22d3ee"
+                triggerOnHover={true}
+              />
             </h2>
-            <p className="text-gray-400">
-              Raretes selectionnees de notre inventaire.
-              Glissez une cartouche vers la console pour la tester.
-            </p>
           </motion.div>
 
-          <div className="flex flex-col lg:flex-row items-center justify-center gap-12">
-            {/* GameBoy Drop Zone */}
+          {/* Bento Grid */}
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Large Card */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="relative"
+              className="md:col-span-2 bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-3xl p-8 relative overflow-hidden group"
             >
-              {/* Drop Zone Indicator */}
-              <div
-                ref={dropZoneRef}
-                className={`absolute -top-6 left-1/2 -translate-x-1/2 w-[120px] h-[30px] rounded-t-lg border-2 border-dashed transition-all duration-300 z-10 ${
-                  isDragging
-                    ? isNearDropZone
-                      ? 'border-emerald-400 bg-emerald-400/20 shadow-[0_0_20px_rgba(52,211,153,0.5)]'
-                      : 'border-gray-500 bg-gray-500/10 animate-pulse'
-                    : 'border-transparent'
-                }`}
-              />
-
-              <GameBoy
-                activeCartridge={activeCartridge}
-                onCartridgeEject={handleCartridgeEject}
-              />
-
-              {/* Eject button hint */}
-              {activeCartridge && (
-                <motion.button
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  onClick={handleCartridgeEject}
-                  className="absolute -bottom-16 left-1/2 -translate-x-1/2 text-sm text-gray-400 hover:text-white transition-colors"
-                >
-                  Cliquez pour ejecter
-                </motion.button>
-              )}
-            </motion.div>
-
-            {/* Cartridge Gallery */}
-            <div className="flex flex-col gap-6">
-              <p className="text-center text-gray-500 text-sm lg:hidden">
-                Appuyez sur une cartouche pour l&apos;inserer
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4 gap-4">
-                {cartridges.map((cartridge) => (
-                  <Cartridge
-                    key={cartridge.id}
-                    {...cartridge}
-                    isInserted={activeCartridge === cartridge.id}
-                    onDragStart={() => setIsDragging(true)}
-                    onDrag={(x, y) => {
-                      setIsNearDropZone(checkNearDropZone(x, y));
-                    }}
-                    onDragEnd={(x, y) => {
-                      if (checkInsideDropZone(x, y)) {
-                        handleCartridgeInsert(cartridge.id);
-                      }
-                      setIsDragging(false);
-                      setIsNearDropZone(false);
-                    }}
-                    onTap={() => {
-                      // Mobile: tap to insert
-                      if (activeCartridge === cartridge.id) {
-                        handleCartridgeEject();
-                      } else {
-                        handleCartridgeInsert(cartridge.id);
-                      }
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust Signals Section */}
-      <section id="restauration" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            {/* Image */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="relative"
-            >
-              <div className="absolute -top-4 -left-4 w-full h-full bg-emerald-100 rounded-2xl" />
-              <Image
-                src="/assets/retro_4.png"
-                alt="Restauration de cartouche"
-                width={600}
-                height={400}
-                className="relative rounded-2xl shadow-xl"
-              />
-            </motion.div>
-
-            {/* Content */}
-            <div>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-              >
-                <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">
-                  Notre Engagement
-                </span>
-                <h2 className="text-3xl md:text-4xl font-bold mt-4 mb-6 tracking-tight">
-                  Restauration de Confiance
-                </h2>
-                <p className="text-gray-600 mb-8">
-                  Chaque jeu passe par notre atelier. Nous ne vendons pas simplement
-                  des jeux - nous leur redonnons vie.
+              <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-colors" />
+              <div className="relative z-10">
+                <div className="w-14 h-14 bg-cyan-500 rounded-2xl flex items-center justify-center mb-6">
+                  <Shield className="w-7 h-7 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-3">Authenticité Garantie</h3>
+                <p className="text-slate-400 leading-relaxed mb-6">
+                  Chaque jeu passe notre processus d&apos;authentification en 12 points.
+                  Aucune reproduction, uniquement des originaux vérifiés.
                 </p>
-              </motion.div>
-
-              <div className="grid gap-6">
-                {[
-                  {
-                    icon: Shield,
-                    title: 'Authenticite Verifiee',
-                    description: 'Processus d\'authentification en 12 points. Aucune reproduction.',
-                    color: 'bg-blue-50 text-blue-600'
-                  },
-                  {
-                    icon: Wrench,
-                    title: 'Restauration Experte',
-                    description: 'Nettoyage des contacts, remplacement batterie, restauration coque.',
-                    color: 'bg-amber-50 text-amber-600'
-                  },
-                  {
-                    icon: Clock,
-                    title: 'Garantie 90 Jours',
-                    description: 'Reparation, remplacement ou remboursement integral.',
-                    color: 'bg-emerald-50 text-emerald-600'
-                  },
-                ].map((item, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    className="flex gap-4"
-                  >
-                    <div className={`w-12 h-12 ${item.color} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                      <item.icon size={24} />
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-black text-white">
+                      <CountUp to={12} duration={2} />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-[#1a1a1a] mb-1">{item.title}</h3>
-                      <p className="text-gray-600 text-sm">{item.description}</p>
-                    </div>
-                  </motion.div>
-                ))}
+                    <div className="text-xs text-slate-400 uppercase">Points</div>
+                  </div>
+                  <div className="w-px h-12 bg-slate-700" />
+                  <div className="text-center">
+                    <div className="text-3xl font-black text-cyan-400">0%</div>
+                    <div className="text-xs text-slate-400 uppercase">Faux</div>
+                  </div>
+                </div>
               </div>
-            </div>
+            </motion.div>
+
+            {/* Small Cards */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="bg-gradient-to-br from-cyan-500/10 to-cyan-400/10 backdrop-blur-sm border border-cyan-500/30 rounded-3xl p-6 flex flex-col justify-between"
+            >
+              <Zap className="w-10 h-10 text-cyan-400 mb-4" />
+              <div>
+                <h3 className="text-xl font-bold text-white mb-2">Restauration Pro</h3>
+                <p className="text-slate-400 text-sm">Nettoyage contacts, batterie neuve, test complet.</p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 backdrop-blur-sm border border-amber-500/30 rounded-3xl p-6 flex flex-col justify-between"
+            >
+              <Trophy className="w-10 h-10 text-amber-400 mb-4" />
+              <div>
+                <h3 className="text-xl font-bold text-white mb-2">Raretés</h3>
+                <p className="text-slate-400 text-sm">Éditions limitées et pièces de collection.</p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+              className="md:col-span-2 bg-slate-800/30 backdrop-blur-sm border border-slate-700/50 rounded-3xl p-8 flex items-center justify-between"
+            >
+              <div>
+                <h3 className="text-2xl font-bold text-white mb-2">Garantie 90 Jours</h3>
+                <p className="text-slate-400">Satisfait ou remboursé, sans questions.</p>
+              </div>
+              <div className="text-6xl font-black bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent">
+                90j
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Featured Collections */}
-      <section id="collections" className="py-24 bg-gray-50">
+      {/* Featured Products Grid */}
+      <section id="products" className="relative z-10 py-24">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -486,113 +404,286 @@ export default function Home() {
             viewport={{ once: true }}
             className="text-center max-w-2xl mx-auto mb-16"
           >
-            <span className="text-sm font-semibold text-emerald-600 uppercase tracking-wider">
+            <span className="text-sm font-bold text-cyan-400 uppercase tracking-wider">
+              Nos Produits
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black mt-4 mb-4 tracking-tight">
+              <Shuffle
+                text="BEST SELLERS"
+                className="bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent text-3xl md:text-5xl font-black"
+                shuffleTimes={2}
+                duration={0.35}
+                stagger={0.025}
+                colorFrom="#06b6d4"
+                colorTo="#22d3ee"
+                triggerOnHover={true}
+              />
+            </h2>
+            <p className="text-slate-400">
+              Des pièces authentiques, restaurées avec passion et garanties.
+            </p>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {products.slice(0, 8).map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.05 }}
+                whileHover={{ y: -8, boxShadow: '0 0 30px rgba(6, 182, 212, 0.2)' }}
+                className="group bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all duration-300"
+              >
+                <div className="relative aspect-square overflow-hidden bg-slate-900/50">
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  {product.badge && (
+                    <span className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold ${
+                      product.badge === 'rare' ? 'bg-amber-500 text-white' :
+                      product.badge === 'bestseller' ? 'bg-emerald-500 text-white' :
+                      product.badge === 'new' ? 'bg-cyan-500 text-white' :
+                      product.badge === 'limited' ? 'bg-orange-500 text-white' :
+                      'bg-red-500 text-white'
+                    }`}>
+                      {product.badge === 'rare' ? 'Rare' :
+                       product.badge === 'bestseller' ? 'Best-seller' :
+                       product.badge === 'new' ? 'Nouveau' :
+                       product.badge === 'limited' ? 'Édition Limitée' :
+                       'Promo'}
+                    </span>
+                  )}
+                  {product.stock === 'low_stock' && (
+                    <span className="absolute top-3 right-3 px-2 py-1 bg-red-500 text-white rounded-full text-[10px] font-bold animate-pulse">
+                      Stock faible
+                    </span>
+                  )}
+                </div>
+                <div className="p-5">
+                  <p className="text-xs text-cyan-400 uppercase tracking-wider mb-1 font-medium">
+                    {product.category}
+                  </p>
+                  <h3 className="font-bold text-white mb-1">{product.name}</h3>
+                  {product.subtitle && (
+                    <p className="text-sm text-slate-400 mb-3">{product.subtitle}</p>
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl font-black text-white">{product.price}€</span>
+                      {product.originalPrice && (
+                        <span className="text-sm text-slate-500 line-through">{product.originalPrice}€</span>
+                      )}
+                    </div>
+                    {product.rating && (
+                      <div className="flex items-center gap-1">
+                        <Star size={14} className="fill-amber-400 text-amber-400" />
+                        <span className="text-sm text-slate-400">{product.rating}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mt-12"
+          >
+            <Magnet padding={80} magnetStrength={3}>
+              <ClickSpark sparkColor="#06b6d4" sparkCount={12} sparkRadius={50} duration={450}>
+                <motion.button
+                  whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(6, 182, 212, 0.3)' }}
+                  whileTap={{ scale: 0.95 }}
+                  className="inline-flex items-center gap-2 border-2 border-cyan-500/50 text-cyan-400 px-8 py-4 rounded-full font-bold hover:bg-cyan-500/10 transition-all"
+                >
+                  Voir Tous les Produits
+                  <ArrowRight size={18} />
+                </motion.button>
+              </ClickSpark>
+            </Magnet>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Interactive Console Section - Test Before Buying */}
+      <CoffreFortSection variant="arcade" className="relative z-10" />
+
+      {/* Collections Section */}
+      <section id="collections" className="relative z-10 py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-2xl mx-auto mb-16"
+          >
+            <span className="text-sm font-bold text-cyan-400 uppercase tracking-wider">
               Nos Collections
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold mt-4 mb-4 tracking-tight">
-              Collections Curees
+            <h2 className="text-3xl md:text-5xl font-black mt-4 mb-4 tracking-tight">
+              <Shuffle
+                text="CHOISISSEZ VOTRE ERE"
+                className="bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent text-3xl md:text-5xl font-black"
+                shuffleTimes={2}
+                duration={0.35}
+                stagger={0.02}
+                colorFrom="#06b6d4"
+                colorTo="#22d3ee"
+                triggerOnHover={true}
+              />
             </h2>
-            <p className="text-gray-600">
-              Plongez dans l&apos;histoire du jeu video, organisee pour le collectionneur exigeant.
+            <p className="text-slate-400">
+              Plongez dans l&apos;histoire du jeu vidéo, organisée par ère.
             </p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                title: "L'Age d'Or",
-                era: '1985-1995',
-                description: 'Classiques NES, SNES, Genesis. Les titres qui ont defini une generation.',
-                gradient: 'from-amber-600 to-orange-700',
-              },
-              {
-                title: 'Legendes Portables',
-                era: 'Game Boy & Beyond',
-                description: 'Du DMG original au GBA SP. Aventures de poche qui ont voyage partout.',
-                gradient: 'from-emerald-600 to-teal-700',
-              },
-              {
-                title: 'Pieces de Collection',
-                era: 'Ultra Rare',
-                description: 'Editions limitees, exemplaires scelles. Qualite investissement.',
-                gradient: 'from-violet-600 to-purple-700',
-              },
-            ].map((collection, index) => (
+            {collections.map((collection, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="group relative overflow-hidden rounded-2xl aspect-[3/4] cursor-pointer"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${collection.gradient}`} />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
+                <PixelCard
+                  variant="blue"
+                  className="!w-full !h-[420px] !rounded-3xl cursor-pointer group"
+                >
+                  {/* Gradient background */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${collection.gradient} opacity-60 rounded-3xl`} />
 
-                {/* Decorative cartridge pattern */}
-                <div className="absolute top-4 right-4 w-16 h-20 bg-white/10 rounded-t-sm rounded-b-lg" />
+                  {/* Collection image */}
+                  {collection.image && (
+                    <div className="absolute inset-0 flex items-center justify-center p-8">
+                      <Image
+                        src={collection.image}
+                        alt={collection.title}
+                        width={200}
+                        height={200}
+                        className="object-contain opacity-90 group-hover:scale-110 transition-transform duration-500 drop-shadow-2xl"
+                      />
+                    </div>
+                  )}
 
-                <div className="absolute bottom-0 left-0 right-0 p-6">
-                  <span className="text-white/60 text-sm font-medium">{collection.era}</span>
-                  <h3 className="text-white font-bold text-2xl mb-2">
-                    {collection.title}
-                  </h3>
-                  <p className="text-white/80 text-sm mb-4">
-                    {collection.description}
-                  </p>
-                  <button className="text-white font-medium text-sm inline-flex items-center gap-2 group-hover:gap-3 transition-all">
-                    Explorer
-                    <ArrowRight size={16} />
-                  </button>
-                </div>
+                  {/* Pixel corners */}
+                  <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-cyan-400/60" />
+                  <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-cyan-400/60" />
+                  <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-cyan-400/60" />
+                  <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-cyan-400/60" />
+
+                  {/* Content overlay */}
+                  <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent rounded-b-3xl">
+                    <span className="text-cyan-400 text-xs font-bold uppercase tracking-wider">{collection.era}</span>
+                    <h3 className="text-white font-black text-2xl mb-2">
+                      {collection.title}
+                    </h3>
+                    <p className="text-white/80 text-sm mb-4 line-clamp-2">
+                      {collection.description}
+                    </p>
+                    <button className="text-cyan-400 font-bold text-sm inline-flex items-center gap-2 group-hover:gap-3 transition-all">
+                      Explorer
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
+                </PixelCard>
               </motion.div>
             ))}
           </div>
 
-          {/* Featured Image */}
+          {/* Featured Banner */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-16"
+            className="mt-12"
           >
-            <div className="relative rounded-2xl overflow-hidden">
+            <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-cyan-600 to-cyan-500">
               <Image
-                src="/assets/retro_gam_3.png"
+                src="/images/collections/classic-cartridges.png"
                 alt="Collection de cartouches iconiques"
                 width={1200}
-                height={400}
-                className="w-full object-cover"
+                height={300}
+                className="w-full h-64 object-cover opacity-30"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+              <div className="absolute inset-0 flex items-center justify-between px-8 md:px-12">
                 <div>
-                  <p className="text-white/80 text-sm">Titres Iconiques</p>
-                  <p className="text-white font-bold text-xl">Authenticite Verifiee</p>
+                  <p className="text-white/80 text-sm font-bold uppercase tracking-wider">Collection Complete</p>
+                  <p className="text-white font-black text-2xl md:text-4xl">+500 Jeux Disponibles</p>
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="bg-white text-[#1a1a1a] px-6 py-3 rounded-full font-medium text-sm"
-                >
-                  Voir Tout
-                </motion.button>
+                <Magnet padding={60} magnetStrength={3}>
+                  <ClickSpark sparkColor="#ffffff" sparkCount={10} sparkRadius={40} duration={400}>
+                    <motion.button
+                      whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255, 255, 255, 0.4)' }}
+                      whileTap={{ scale: 0.95 }}
+                      className="bg-white text-slate-900 px-6 py-3 rounded-full font-bold text-sm shadow-xl"
+                    >
+                      Voir Tout
+                    </motion.button>
+                  </ClickSpark>
+                </Magnet>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className="relative z-10 py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center max-w-2xl mx-auto mb-16"
+          >
+            <span className="text-sm font-bold text-cyan-400 uppercase tracking-wider">
+              Temoignages
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black mt-4 mb-4 tracking-tight">
+              <Shuffle
+                text="NOS GAMERS"
+                className="bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent text-3xl md:text-5xl font-black"
+                shuffleTimes={2}
+                duration={0.35}
+                stagger={0.03}
+                colorFrom="#06b6d4"
+                colorTo="#22d3ee"
+                triggerOnHover={true}
+              />
+            </h2>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-slate-900/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl md:rounded-3xl overflow-hidden"
+          >
+            <TestimonialSlider reviews={reviews} />
+          </motion.div>
+        </div>
+      </section>
+
       {/* Community Section */}
-      <section id="apropos" className="py-24 bg-[#1a1a1a] relative overflow-hidden">
+      <section id="a-propos" className="relative z-10 py-24 bg-slate-950 overflow-hidden">
         <div className="absolute inset-0">
           <Image
-            src="/assets/retro_game_2.png"
+            src="/images/community/player-lifestyle.png"
             alt="Gaming lifestyle"
             fill
-            className="object-cover opacity-30"
+            sizes="100vw"
+            className="object-cover opacity-20"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a1a] via-[#1a1a1a]/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6">
@@ -602,15 +693,18 @@ export default function Home() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <span className="text-sm font-semibold text-emerald-400 uppercase tracking-wider">
+              <span className="text-sm font-bold text-cyan-400 uppercase tracking-wider">
                 Communaute
               </span>
-              <h2 className="text-3xl md:text-5xl font-bold mt-4 mb-6 tracking-tight text-white">
-                Plus qu&apos;une Boutique
+              <h2 className="text-3xl md:text-5xl font-black mt-4 mb-6 tracking-tight text-white">
+                Plus qu&apos;une{' '}
+                <span className="bg-gradient-to-r from-cyan-400 to-cyan-300 bg-clip-text text-transparent">
+                  Boutique
+                </span>
               </h2>
-              <p className="text-gray-400 text-lg mb-8">
-                RetroCollect est une communaute de collectionneurs qui partagent
-                la meme passion pour la preservation de l&apos;histoire du jeu video.
+              <p className="text-slate-400 text-lg mb-8 leading-relaxed">
+                RetroCollect est une communauté de collectionneurs qui partagent
+                la même passion pour la préservation de l&apos;histoire du jeu vidéo.
               </p>
             </motion.div>
 
@@ -627,88 +721,33 @@ export default function Home() {
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <div className="text-2xl md:text-3xl font-bold text-white">{stat.value}</div>
-                  <div className="text-gray-500 text-sm">{stat.label}</div>
+                  <div className="text-2xl md:text-3xl font-black text-white">{stat.value}</div>
+                  <div className="text-slate-500 text-sm">{stat.label}</div>
                 </motion.div>
               ))}
             </div>
 
-            <motion.button
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="inline-flex items-center gap-2 bg-white text-[#1a1a1a] px-7 py-4 rounded-full font-medium"
-            >
-              Rejoindre la Communaute
-              <ArrowRight size={18} />
-            </motion.button>
+            <Magnet padding={80} magnetStrength={3}>
+              <ClickSpark sparkColor="#06b6d4" sparkCount={12} sparkRadius={50} duration={500}>
+                <motion.button
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(6, 182, 212, 0.4)' }}
+                  whileTap={{ scale: 0.95 }}
+                  className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-white px-7 py-4 rounded-full font-bold transition-colors shadow-lg shadow-cyan-500/20"
+                >
+                  Rejoindre la Communaute
+                  <ArrowRight size={18} />
+                </motion.button>
+              </ClickSpark>
+            </Magnet>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#111] py-16 border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
-                  <span className="font-mono font-extrabold text-white tracking-tighter text-lg">RC</span>
-                </div>
-                <span className="font-bold text-lg text-white">RetroCollect</span>
-              </div>
-              <p className="text-gray-500 text-sm">
-                Nostalgie Curee. Etat Mint.
-              </p>
-            </div>
-
-            {[
-              { title: 'Boutique', links: ['Tous les Jeux', 'Consoles', 'Accessoires', 'Nouveautes'] },
-              { title: 'Support', links: ['Livraison', 'Retours', 'FAQ', 'Contact'] },
-              { title: 'Legal', links: ['Mentions Legales', 'Confidentialite', 'CGV', 'Cookies'] },
-            ].map((column, index) => (
-              <div key={index}>
-                <h4 className="font-semibold text-white mb-4">{column.title}</h4>
-                <ul className="space-y-3">
-                  {column.links.map((link) => (
-                    <li key={link}>
-                      <a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">
-                        {link}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="border-t border-white/10 pt-8">
-            <p className="text-gray-600 text-xs mb-4">
-              RetroCollect est un revendeur independant. Non affilie a Nintendo Co., Ltd.,
-              Sega Sammy Holdings, ou Sony Interactive Entertainment. Toutes les marques
-              appartiennent a leurs proprietaires respectifs.
-            </p>
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-gray-500 text-sm">
-                © 2024 RetroCollect. Tous droits reserves.
-              </p>
-              <div className="flex gap-6">
-                <a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">
-                  Discord
-                </a>
-                <a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">
-                  Instagram
-                </a>
-                <a href="#" className="text-gray-500 hover:text-white transition-colors text-sm">
-                  Twitter
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <FooterSection />
     </main>
   );
 }
