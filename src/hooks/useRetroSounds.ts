@@ -17,14 +17,32 @@ type SoundType =
 interface RetroSoundsOptions {
   enabled?: boolean;
   volume?: number;
+  /** Minimum ms between same sound plays (default: 50) */
+  cooldown?: number;
 }
 
+// Sound cooldowns to prevent spam (in ms)
+const SOUND_COOLDOWNS: Record<SoundType, number> = {
+  eat: 80,        // Fast but not instant
+  click: 30,      // Very quick
+  select: 50,     // Quick
+  start: 500,     // Prevent double-start
+  gameOver: 1000, // Only once
+  boot: 1000,     // Only once
+  error: 300,     // Allow some repetition
+  confirm: 200,   // Moderate
+  hit: 100,       // Allow quick hits
+  levelUp: 300,   // Moderate
+};
+
 export function useRetroSounds(options: RetroSoundsOptions = {}) {
-  const { enabled = true, volume = 0.3 } = options;
+  const { enabled = true, volume = 0.3, cooldown = 50 } = options;
   const audioContextRef = useRef<AudioContext | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
   const timeoutIdsRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
   const isUnmountedRef = useRef(false);
+  // Track last play time for each sound type
+  const lastPlayTimeRef = useRef<Map<SoundType, number>>(new Map());
 
   // Initialize AudioContext lazily (requires user interaction)
   const getAudioContext = useCallback(() => {
@@ -106,9 +124,24 @@ export function useRetroSounds(options: RetroSoundsOptions = {}) {
     });
   }, [enabled, playTone]);
 
+  // Check if sound is on cooldown
+  const isOnCooldown = useCallback((soundType: SoundType): boolean => {
+    const lastPlayTime = lastPlayTimeRef.current.get(soundType);
+    if (!lastPlayTime) return false;
+
+    const soundCooldown = SOUND_COOLDOWNS[soundType] || cooldown;
+    return Date.now() - lastPlayTime < soundCooldown;
+  }, [cooldown]);
+
   // Predefined retro sounds
   const playSound = useCallback((soundType: SoundType) => {
     if (!enabled || isUnmountedRef.current) return;
+
+    // Check cooldown to prevent spam
+    if (isOnCooldown(soundType)) return;
+
+    // Record play time
+    lastPlayTimeRef.current.set(soundType, Date.now());
 
     switch (soundType) {
       case 'boot':
@@ -199,7 +232,7 @@ export function useRetroSounds(options: RetroSoundsOptions = {}) {
         ], 'triangle');
         break;
     }
-  }, [enabled, playTone, playSequence]);
+  }, [enabled, playTone, playSequence, isOnCooldown]);
 
   // Cleanup
   useEffect(() => {

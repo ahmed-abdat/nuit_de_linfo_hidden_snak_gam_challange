@@ -15,60 +15,63 @@ import { CoffreFortSection } from '@/components/sections/CoffreFortSection';
 import { Header } from '@/components/Header';
 import BlurText from '@/components/BlurText';
 import CountUp from '@/components/CountUp';
-import RetroGrid from '@/components/RetroGrid';
-
-const PixelCard = dynamic(() => import('@/components/PixelCard'), { ssr: false });
+import BackgroundEffects from '@/components/BackgroundEffects';
 import { products, collections, galleryItems, reviews } from '@/data/products';
-import { CircularGallery } from '@/components/CircularGallery2';
 import { TestimonialSlider } from '@/components/TestimonialSlider';
-import Dither from '@/components/Dither';
-import Squares from '@/components/Squares';
 import Shuffle from '@/components/Shuffle';
-import ClickSpark from '@/components/ClickSpark';
-import Noise from '@/components/Noise';
-import Magnet from '@/components/Magnet';
 import FooterSection from '@/components/FooterOne';
+import {
+  FADE_IN_UP,
+  FADE_IN_UP_30,
+  FADE_IN_UP_VISIBLE,
+  FADE_IN_RIGHT,
+  FADE_IN_RIGHT_VISIBLE,
+  VIEWPORT_ONCE,
+  PRODUCT_HOVER,
+  BUTTON_HOVER_GLOW,
+  BUTTON_HOVER_GLOW_STRONG,
+  BUTTON_HOVER_GLOW_WHITE,
+  TAP_SCALE,
+  HOVER_SCALE,
+  GALLERY_TRANSITION,
+} from '@/constants';
+import { useQualityLevel } from '@/hooks';
+
+// Lazy load heavy components
+const PixelCard = dynamic(() => import('@/components/PixelCard'), { ssr: false });
+const Squares = dynamic(() => import('@/components/Squares'), { ssr: false });
+const ClickSpark = dynamic(() => import('@/components/ClickSpark'), { ssr: false });
+const Magnet = dynamic(() => import('@/components/Magnet'), { ssr: false });
+
+// Lazy load CircularGallery - only on desktop
+const CircularGallery = dynamic(
+  () => import('@/components/CircularGallery2').then(mod => ({ default: mod.CircularGallery })),
+  { ssr: false, loading: () => <div className="w-full h-full" /> }
+);
 
 export default function Home() {
+  // Adaptive quality - automatically reduces effects when device lags
+  const qualityLevel = useQualityLevel();
+  const showSquares = qualityLevel === 'high';
+
   return (
     <main className="dark min-h-screen bg-background text-foreground overflow-hidden">
-      {/* Dither Background - GameBoy Green aesthetic */}
-      <div className="fixed inset-0 z-0 opacity-30">
-        <Dither
-          waveColor={[0.06, 0.78, 0.64]}
-          waveSpeed={0.03}
-          waveFrequency={2}
-          waveAmplitude={0.4}
-          colorNum={4}
-          pixelSize={3}
-          enableMouseInteraction={true}
-          mouseRadius={0.8}
-        />
-      </div>
-
-      {/* RetroGrid overlay */}
-      <div className="fixed inset-0 z-0 opacity-50">
-        <RetroGrid />
-      </div>
-
-      {/* CRT Noise overlay */}
-      <div className="fixed inset-0 z-[1] pointer-events-none opacity-[0.03]">
-        <Noise patternAlpha={8} patternRefreshInterval={3} />
-      </div>
+      {/* Optimized background effects - auto-disables heavy effects on mobile */}
+      <BackgroundEffects />
 
       {/* Header */}
       <Header />
 
       {/* Hero Section - Gaming Focused */}
-      <section className="relative min-h-screen pt-24 sm:pt-28 md:pt-32 pb-12 md:pb-20 flex items-center">
+      <section className="relative min-h-screen pt-24 sm:pt-28 md:pt-32 pb-12 md:pb-20 flex items-center overflow-x-clip">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 w-full">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             {/* Left - Animated Text */}
             <div className="max-w-xl">
               {/* Badge */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={FADE_IN_UP}
+                animate={FADE_IN_UP_VISIBLE}
                 className="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold mb-4 sm:mb-6 md:mb-8"
               >
                 <motion.span
@@ -100,8 +103,8 @@ export default function Home() {
               </div>
 
               <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={FADE_IN_UP}
+                animate={FADE_IN_UP_VISIBLE}
                 transition={{ delay: 0.4 }}
                 className="text-sm sm:text-base md:text-lg text-slate-400 mb-6 sm:mb-8 leading-relaxed"
               >
@@ -111,8 +114,8 @@ export default function Home() {
 
               {/* CTAs with Magnet + ClickSpark */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={FADE_IN_UP}
+                animate={FADE_IN_UP_VISIBLE}
                 transition={{ delay: 0.5 }}
                 className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-8 sm:mb-12"
               >
@@ -120,8 +123,8 @@ export default function Home() {
                   <ClickSpark sparkColor="#06b6d4" sparkCount={10} sparkRadius={40} duration={400}>
                     <motion.a
                       href="#coffre-fort"
-                      whileHover={{ scale: 1.05, boxShadow: '0 0 25px rgba(6, 182, 212, 0.4)' }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={BUTTON_HOVER_GLOW}
+                      whileTap={TAP_SCALE}
                       className="inline-flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-colors shadow-lg shadow-cyan-500/20"
                     >
                       <Gamepad2 size={16} className="sm:w-[18px] sm:h-[18px]" />
@@ -132,8 +135,8 @@ export default function Home() {
                 <Magnet padding={40} magnetStrength={2}>
                   <ClickSpark sparkColor="#94a3b8" sparkCount={8} sparkRadius={35} duration={400}>
                     <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={HOVER_SCALE}
+                      whileTap={TAP_SCALE}
                       className="inline-flex items-center justify-center gap-2 border border-slate-600 text-slate-300 hover:text-white hover:border-cyan-500/50 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-colors"
                     >
                       Explorer
@@ -148,7 +151,7 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.7 }}
-                className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 md:gap-10"
+                className="flex items-center justify-between sm:justify-start gap-6 sm:gap-8 md:gap-12"
               >
                 {[
                   { value: 500, suffix: '+', label: 'Jeux', icon: Gamepad2 },
@@ -179,18 +182,20 @@ export default function Home() {
 
             {/* Right - Animated 3D Gallery */}
             <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-              className="hidden lg:block h-[500px] relative"
+              initial={FADE_IN_RIGHT}
+              animate={FADE_IN_RIGHT_VISIBLE}
+              transition={GALLERY_TRANSITION}
+              className="hidden lg:block h-[500px] relative overflow-hidden"
             >
-              {/* Glow effects */}
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-cyan-500/20 rounded-full blur-[100px]" />
-              <div className="absolute top-1/3 right-1/4 w-40 h-40 bg-cyan-400/15 rounded-full blur-[80px]" />
+              {/* Glow effects - contained within bounds */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-cyan-500/20 rounded-full blur-[80px]" />
+                <div className="absolute top-1/3 right-1/4 w-32 h-32 bg-cyan-400/15 rounded-full blur-[60px]" />
+              </div>
 
               <CircularGallery
                 items={galleryItems}
-                bend={3}
+                bend={2}
                 borderRadius={0.05}
                 scrollSpeed={2}
               />
@@ -202,21 +207,24 @@ export default function Home() {
 
       {/* Features Bento Grid */}
       <section id="restauration" className="relative z-10 py-24 overflow-hidden">
-        {/* Animated Squares Background */}
-        <div className="absolute inset-0 opacity-30">
-          <Squares
-            direction="diagonal"
-            speed={0.3}
-            borderColor="rgba(6, 182, 212, 0.3)"
-            squareSize={50}
-            hoverFillColor="rgba(6, 182, 212, 0.1)"
-          />
-        </div>
+        {/* Animated Squares Background - only on high quality */}
+        {showSquares && (
+          <div className="absolute inset-0 opacity-30">
+            <Squares
+              direction="diagonal"
+              speed={0.3}
+              borderColor="rgba(6, 182, 212, 0.3)"
+              squareSize={50}
+              hoverFillColor="rgba(6, 182, 212, 0.1)"
+              targetFps={20}
+            />
+          </div>
+        )}
         <div className="relative max-w-7xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            initial={FADE_IN_UP}
+            whileInView={FADE_IN_UP_VISIBLE}
+            viewport={VIEWPORT_ONCE}
             className="text-center max-w-2xl mx-auto mb-16"
           >
             <span className="text-sm font-bold text-cyan-400 uppercase tracking-wider">
@@ -352,11 +360,11 @@ export default function Home() {
             {products.slice(0, 8).map((product, index) => (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                initial={FADE_IN_UP_30}
+                whileInView={FADE_IN_UP_VISIBLE}
+                viewport={VIEWPORT_ONCE}
                 transition={{ delay: index * 0.05 }}
-                whileHover={{ y: -8, boxShadow: '0 0 30px rgba(6, 182, 212, 0.2)' }}
+                whileHover={PRODUCT_HOVER}
                 className="group bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all duration-300"
               >
                 <div className="relative aspect-square overflow-hidden bg-slate-900/50">
@@ -416,16 +424,16 @@ export default function Home() {
           </div>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            initial={FADE_IN_UP}
+            whileInView={FADE_IN_UP_VISIBLE}
+            viewport={VIEWPORT_ONCE}
             className="text-center mt-12"
           >
             <Magnet padding={80} magnetStrength={3}>
               <ClickSpark sparkColor="#06b6d4" sparkCount={12} sparkRadius={50} duration={450}>
                 <motion.button
-                  whileHover={{ scale: 1.05, boxShadow: '0 0 30px rgba(6, 182, 212, 0.3)' }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={BUTTON_HOVER_GLOW_STRONG}
+                  whileTap={TAP_SCALE}
                   className="inline-flex items-center gap-2 border-2 border-cyan-500/50 text-cyan-400 px-8 py-4 rounded-full font-bold hover:bg-cyan-500/10 transition-all"
                 >
                   Voir Tous les Produits
@@ -494,6 +502,7 @@ export default function Home() {
                         width={200}
                         height={200}
                         className="object-contain opacity-90 group-hover:scale-110 transition-transform duration-500 drop-shadow-2xl"
+                        style={{ width: 'auto', height: 'auto' }}
                       />
                     </div>
                   )}
@@ -546,8 +555,8 @@ export default function Home() {
                 <Magnet padding={60} magnetStrength={3}>
                   <ClickSpark sparkColor="#ffffff" sparkCount={10} sparkRadius={40} duration={400}>
                     <motion.button
-                      whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255, 255, 255, 0.4)' }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={BUTTON_HOVER_GLOW_WHITE}
+                      whileTap={TAP_SCALE}
                       className="bg-white text-slate-900 px-6 py-3 rounded-full font-bold text-sm shadow-xl"
                     >
                       Voir Tout

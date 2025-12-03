@@ -3,16 +3,28 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConsoleCarousel } from '@/components/ConsoleCarousel';
 import { Cartridge } from '@/components/Cartridge';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { cartridges, ExtendedCartridgeData } from '@/data/cartridges';
 import { ConsoleId } from '@/data/consoles';
 import { cn } from '@/lib/utils';
 import ClickSpark from '@/components/ClickSpark';
-import Squares from '@/components/Squares';
+import dynamic from 'next/dynamic';
+import { useQualityLevel } from '@/hooks';
+
+// Lazy load Squares - only on high quality
+const Squares = dynamic(() => import('@/components/Squares'), { ssr: false });
 
 interface CoffreFortSectionProps {
   variant?: 'premium' | 'arcade' | 'museum' | 'modern';
   className?: string;
+}
+
+// Cached rect type
+interface CachedRect {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
 }
 
 export function CoffreFortSection({ variant = 'premium', className }: CoffreFortSectionProps) {
@@ -25,6 +37,42 @@ export function CoffreFortSection({ variant = 'premium', className }: CoffreFort
   const carouselRef = useRef<HTMLDivElement>(null);
   // Use ref to track drop zone proximity - refs don't have stale closure issues
   const isNearDropZoneRef = useRef(false);
+  // Cache drop zone rect to avoid getBoundingClientRect on every drag event
+  const cachedRectRef = useRef<CachedRect | null>(null);
+  const lastDragCheckRef = useRef<number>(0);
+
+  // Get quality level for conditional rendering
+  const qualityLevel = useQualityLevel();
+  const showSquares = qualityLevel === 'high';
+
+  // Update cached rect on scroll/resize
+  const updateCachedRect = useCallback(() => {
+    if (!dropZoneRef.current) return;
+    const rect = dropZoneRef.current.getBoundingClientRect();
+    cachedRectRef.current = {
+      top: rect.top + window.scrollY,
+      bottom: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+      right: rect.right + window.scrollX,
+    };
+  }, []);
+
+  // Setup scroll/resize listeners to update cached rect
+  useEffect(() => {
+    updateCachedRect();
+
+    const handleScrollOrResize = () => {
+      updateCachedRect();
+    };
+
+    window.addEventListener('scroll', handleScrollOrResize, { passive: true });
+    window.addEventListener('resize', handleScrollOrResize, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', handleScrollOrResize);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [updateCachedRect]);
 
   // Handle cartridge insertion with animation
   const handleCartridgeInsert = useCallback((cartridgeId: string) => {
@@ -48,26 +96,32 @@ export function CoffreFortSection({ variant = 'premium', className }: CoffreFort
     setActiveCartridge(null);
   }, []);
 
-  // Check if point is near drop zone (larger threshold for better UX)
+  // Check if point is near drop zone using cached rect (OPTIMIZED)
   const checkNearDropZone = useCallback((x: number, y: number) => {
-    if (!dropZoneRef.current) return false;
-    const rect = dropZoneRef.current.getBoundingClientRect();
+    // Throttle checks to max 30fps (33ms)
+    const now = Date.now();
+    if (now - lastDragCheckRef.current < 33) {
+      return isNearDropZoneRef.current; // Return last known value
+    }
+    lastDragCheckRef.current = now;
+
+    // Use cached rect or update if not available
+    if (!cachedRectRef.current) {
+      updateCachedRect();
+    }
+
+    const rect = cachedRectRef.current;
+    if (!rect) return false;
+
     const threshold = 150;
 
-    // Convert viewport rect to page coordinates (add scroll offset)
-    // Framer Motion's info.point gives page coordinates, but getBoundingClientRect gives viewport coordinates
-    const rectTop = rect.top + window.scrollY;
-    const rectBottom = rect.bottom + window.scrollY;
-    const rectLeft = rect.left + window.scrollX;
-    const rectRight = rect.right + window.scrollX;
-
     return (
-      x >= rectLeft - threshold &&
-      x <= rectRight + threshold &&
-      y >= rectTop - threshold &&
-      y <= rectBottom + threshold
+      x >= rect.left - threshold &&
+      x <= rect.right + threshold &&
+      y >= rect.top - threshold &&
+      y <= rect.bottom + threshold
     );
-  }, []);
+  }, [updateCachedRect]);
 
 
   // Variant-specific styles
@@ -122,16 +176,19 @@ export function CoffreFortSection({ variant = 'premium', className }: CoffreFort
 
   return (
     <section id="coffre-fort" className={cn('relative py-16 md:py-24 overflow-hidden', styles.bg, className)}>
-      {/* Animated Squares Background */}
-      <div className="absolute inset-0 opacity-30">
-        <Squares
-          direction="diagonal"
-          speed={0.3}
-          borderColor="rgba(6, 182, 212, 0.3)"
-          squareSize={50}
-          hoverFillColor="rgba(6, 182, 212, 0.1)"
-        />
-      </div>
+      {/* Animated Squares Background - only on high quality */}
+      {showSquares && (
+        <div className="absolute inset-0 opacity-30">
+          <Squares
+            direction="diagonal"
+            speed={0.3}
+            borderColor="rgba(6, 182, 212, 0.3)"
+            squareSize={50}
+            hoverFillColor="rgba(6, 182, 212, 0.1)"
+            targetFps={20}
+          />
+        </div>
+      )}
       <div className="relative max-w-4xl mx-auto px-6">
         {/* Header */}
         <motion.div
