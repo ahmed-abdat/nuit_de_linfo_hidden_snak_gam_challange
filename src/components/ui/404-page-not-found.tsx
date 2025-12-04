@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft } from "lucide-react";
 
 export function NotFoundPage() {
@@ -83,30 +82,27 @@ export function NotFoundPage() {
             </motion.div>
           </motion.div>
 
-          {/* Action buttons - High contrast for accessibility */}
+          {/* Action buttons - Retro GameBoy style */}
           <motion.div
             className="flex flex-col sm:flex-row gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
           >
-            <Button
+            <button
               onClick={() => router.push("/")}
-              size="lg"
-              className="bg-[var(--gameboy-green-light)] hover:bg-[var(--gameboy-green-mid)] text-[var(--gameboy-green-darkest)] font-mono text-sm sm:text-base px-6 py-3 font-bold transition-all hover:scale-105 shadow-md"
+              className="bg-[var(--gameboy-green-light)] hover:bg-[var(--gameboy-green-mid)] text-[var(--gameboy-green-darkest)] font-mono text-sm sm:text-base px-6 py-3 font-bold transition-all hover:scale-105 border-4 border-[var(--gameboy-green-dark)] shadow-[4px_4px_0_var(--gameboy-green-darkest)] hover:shadow-[2px_2px_0_var(--gameboy-green-darkest)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-1 active:translate-y-1 flex items-center justify-center gap-2"
             >
-              <Home className="w-4 h-4 mr-2" aria-hidden="true" />
+              <Home className="w-4 h-4" aria-hidden="true" />
               RETOUR À L&apos;ACCUEIL
-            </Button>
-            <Button
+            </button>
+            <button
               onClick={() => router.back()}
-              size="lg"
-              variant="outline"
-              className="bg-[var(--gameboy-green-light)]/20 hover:bg-[var(--gameboy-green-light)]/30 text-[var(--gameboy-green-light)] border-2 border-[var(--gameboy-green-light)] font-mono text-sm sm:text-base px-6 py-3 font-bold transition-all hover:scale-105"
+              className="bg-[var(--gameboy-green-dark)] hover:bg-[var(--gameboy-green-darkest)] text-[var(--gameboy-green-light)] font-mono text-sm sm:text-base px-6 py-3 font-bold transition-all hover:scale-105 border-4 border-[var(--gameboy-green-light)] shadow-[4px_4px_0_var(--gameboy-green-darkest)] hover:shadow-[2px_2px_0_var(--gameboy-green-darkest)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-1 active:translate-y-1 flex items-center justify-center gap-2"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
               PAGE PRÉCÉDENTE
-            </Button>
+            </button>
           </motion.div>
         </div>
       </div>
