@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { Header } from '@/components/Header';
 import BackgroundEffects from '@/components/BackgroundEffects';
 import FooterSection from '@/components/FooterOne';
+import { MobileExperienceNotice } from '@/components/MobileExperienceNotice';
 
 // Import section components
 import { HeroSection } from '@/components/sections/HeroSection';
@@ -44,6 +45,9 @@ const CoffreFortSection = dynamic(
 export default function Home() {
   return (
     <main className="dark min-h-screen bg-background text-foreground overflow-hidden">
+      {/* Mobile notice - suggests desktop for full experience */}
+      <MobileExperienceNotice />
+
       {/* Optimized background effects - auto-disables heavy effects on mobile */}
       <BackgroundEffects />
 
