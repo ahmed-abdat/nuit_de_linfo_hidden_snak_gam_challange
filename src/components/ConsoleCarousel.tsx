@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { motion, AnimatePresence, PanInfo, useMotionValue, useTransform } from 'framer-motion';
 import { GameBoy } from '@/components/GameBoy/index';
 import { NeoGeoPocket } from '@/components/NeoGeoPocket';
 import { consoles, getDefaultStartIndex, ConsoleId } from '@/data/consoles';
@@ -55,6 +55,11 @@ export function ConsoleCarousel({
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [direction, setDirection] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  // Motion values for smooth drag feedback
+  const dragX = useMotionValue(0);
+  const dragRotate = useTransform(dragX, [-200, 0, 200], [-3, 0, 3]);
+  const dragScale = useTransform(dragX, [-200, 0, 200], [0.98, 1, 0.98]);
 
   const currentConsole = consoles[activeIndex];
   const CurrentConsoleComponent = ConsoleComponents[currentConsole.id];
@@ -112,7 +117,10 @@ export function ConsoleCarousel({
   const handleDragEnd = useCallback(
     (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
       const swipeThreshold = 50;
-      const velocityThreshold = 200;
+      const velocityThreshold = 300;
+
+      // Reset drag position with spring animation
+      dragX.set(0);
 
       // Don't allow swiping when game is active
       if (activeCartridge && currentConsole.id === 'gameboy') return;
@@ -129,7 +137,7 @@ export function ConsoleCarousel({
         goToNext();
       }
     },
-    [goToPrevious, goToNext, activeCartridge, currentConsole.id]
+    [goToPrevious, goToNext, activeCartridge, currentConsole.id, dragX]
   );
 
   // Variant-specific styles (removed arrow styles)
@@ -170,12 +178,12 @@ export function ConsoleCarousel({
 
   const styles = variantStyles[variant];
 
-  // Animation variants - smooth sliding
+  // Animation variants - smooth sliding with gentle easing
   const slideVariants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? 300 : -300,
+      x: direction > 0 ? 250 : -250,
       opacity: 0,
-      scale: 0.95,
+      scale: 0.92,
     }),
     center: {
       x: 0,
@@ -183,9 +191,9 @@ export function ConsoleCarousel({
       scale: 1,
     },
     exit: (direction: number) => ({
-      x: direction > 0 ? -300 : 300,
+      x: direction > 0 ? -250 : 250,
       opacity: 0,
-      scale: 0.95,
+      scale: 0.92,
     }),
   };
 
@@ -193,16 +201,20 @@ export function ConsoleCarousel({
     <div className={cn('relative', className)}>
       {/* Console Display Area with Swipe Support */}
       <motion.div
-        className="relative flex items-center justify-center cursor-grab active:cursor-grabbing"
+        className="relative flex items-center justify-center cursor-grab active:cursor-grabbing touch-pan-y"
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.1}
+        dragElastic={0.3}
         onDragEnd={handleDragEnd}
+        style={{ x: dragX }}
       >
         {/* Console Container */}
-        <div className="relative overflow-visible min-h-[560px] md:min-h-[600px] flex items-center justify-center">
+        <motion.div
+          className="relative overflow-visible min-h-[560px] md:min-h-[600px] flex items-center justify-center"
+          style={{ rotate: dragRotate, scale: dragScale }}
+        >
           <AnimatePresence
-            mode="wait"
+            mode="popLayout"
             custom={direction}
             onExitComplete={() => setIsAnimating(false)}
           >
@@ -214,9 +226,9 @@ export function ConsoleCarousel({
               animate="center"
               exit="exit"
               transition={{
-                x: { type: 'spring', stiffness: 300, damping: 30 },
-                opacity: { duration: 0.25 },
-                scale: { duration: 0.25 },
+                x: { type: 'spring', stiffness: 260, damping: 26 },
+                opacity: { duration: 0.2 },
+                scale: { duration: 0.2 },
               }}
               className="flex flex-col items-center"
             >
@@ -226,7 +238,7 @@ export function ConsoleCarousel({
               />
             </motion.div>
           </AnimatePresence>
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* Console Info Card */}
