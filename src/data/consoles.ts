@@ -54,9 +54,9 @@ export const consoles: ConsoleData[] = [
 
 /**
  * Get the default starting index for the carousel
- * Returns NeoGeoPocket (index 1) to hide the GameBoy and Snake game
+ * Returns GameBoy (index 0) as the primary console
  */
-export const getDefaultStartIndex = (): number => 1;
+export const getDefaultStartIndex = (): number => 0;
 
 /**
  * Check if a console can play games (only GameBoy)
