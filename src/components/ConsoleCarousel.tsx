@@ -4,19 +4,19 @@ import { useState, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { GameBoy } from '@/components/GameBoy/index';
 import { NeoGeoPocket } from '@/components/NeoGeoPocket';
-import { consoles, getRandomStartIndex, ConsoleId } from '@/data/consoles';
+import { consoles, getDefaultStartIndex, ConsoleId } from '@/data/consoles';
 import { cn } from '@/lib/utils';
 
-// Hydration-safe random index using useSyncExternalStore
+// Hydration-safe default index using useSyncExternalStore
 const emptySubscribe = () => () => {};
-let cachedRandomIndex: number | null = null;
-const getClientRandomIndex = () => {
-  if (cachedRandomIndex === null) {
-    cachedRandomIndex = getRandomStartIndex();
+let cachedDefaultIndex: number | null = null;
+const getClientDefaultIndex = () => {
+  if (cachedDefaultIndex === null) {
+    cachedDefaultIndex = getDefaultStartIndex();
   }
-  return cachedRandomIndex;
+  return cachedDefaultIndex;
 };
-const getServerRandomIndex = () => 0;
+const getServerDefaultIndex = () => getDefaultStartIndex();
 
 interface ConsoleCarouselProps {
   activeCartridge: string | null;
@@ -46,11 +46,11 @@ export function ConsoleCarousel({
   variant = 'premium',
   className,
 }: ConsoleCarouselProps) {
-  // Hydration-safe random starting index
+  // Hydration-safe default starting index (NeoGeoPocket to hide GameBoy)
   const initialIndex = useSyncExternalStore(
     emptySubscribe,
-    getClientRandomIndex,
-    getServerRandomIndex
+    getClientDefaultIndex,
+    getServerDefaultIndex
   );
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [direction, setDirection] = useState(0);
