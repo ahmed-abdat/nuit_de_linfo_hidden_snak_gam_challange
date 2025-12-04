@@ -178,7 +178,7 @@ export function HeroSection() {
             initial={FADE_IN_RIGHT}
             animate={FADE_IN_RIGHT_VISIBLE}
             transition={GALLERY_TRANSITION}
-            className="hidden lg:block h-[500px] relative overflow-hidden"
+            className="hidden lg:block h-[550px] relative overflow-visible"
           >
             {/* Glow effects - contained within bounds */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -188,7 +188,7 @@ export function HeroSection() {
 
             <CircularGallery
               items={galleryItems}
-              bend={2}
+              bend={1.5}
               borderRadius={0.05}
               scrollSpeed={2}
             />
