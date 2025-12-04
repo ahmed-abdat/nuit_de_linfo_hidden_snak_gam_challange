@@ -1,11 +1,14 @@
 'use client';
 
+import { useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import type { Direction } from './types';
 
 /**
  * GameBoyControls - D-pad and action buttons for the GameBoy
  * Separated for better maintainability and reusability
+ *
+ * Uses onTouchEnd + onClick pattern to prevent double-execution on mobile
  */
 
 interface DPadProps {
@@ -32,21 +35,32 @@ interface StartSelectProps {
  * D-Pad Component
  */
 export function DPad({ onPress, buttonPressed, disabled = false }: DPadProps) {
-  const handlePress = (dir: Direction) => {
-    if (!disabled) {
-      onPress(dir);
-    }
-  };
+  const lastPressTime = useRef<number>(0);
 
-  const buttonClasses = "bg-[#2c2c2c] hover:bg-[#3c3c3c] cursor-pointer touch-manipulation";
+  const handlePress = useCallback((dir: Direction, e: React.TouchEvent | React.MouseEvent) => {
+    if (disabled) return;
+
+    // Debounce to prevent double-execution (touch + synthetic click)
+    const now = Date.now();
+    if (now - lastPressTime.current < 50) return;
+    lastPressTime.current = now;
+
+    // Prevent default to stop synthetic click on touch devices
+    if ('touches' in e) {
+      e.preventDefault();
+    }
+
+    onPress(dir);
+  }, [disabled, onPress]);
+
+  const buttonClasses = "bg-[#2c2c2c] hover:bg-[#3c3c3c] cursor-pointer touch-manipulation select-none";
   const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
 
   return (
     <div className="relative w-[90px] h-[90px] md:w-[95px] md:h-[95px]">
       {/* Up Button */}
       <motion.button
-        onClick={() => handlePress('UP')}
-        onTouchStart={(e) => { e.stopPropagation(); handlePress('UP'); }}
+        onPointerDown={(e) => { e.preventDefault(); handlePress('UP', e); }}
         className={`absolute left-1/2 -translate-x-1/2 top-0 w-[30px] h-[30px] md:w-[32px] md:h-[32px] rounded-t-sm ${buttonClasses} ${disabledClasses}`}
         animate={{
           backgroundColor: buttonPressed === 'UP' ? '#1c1c1c' : '#2c2c2c',
@@ -60,8 +74,7 @@ export function DPad({ onPress, buttonPressed, disabled = false }: DPadProps) {
 
       {/* Down Button */}
       <motion.button
-        onClick={() => handlePress('DOWN')}
-        onTouchStart={(e) => { e.stopPropagation(); handlePress('DOWN'); }}
+        onPointerDown={(e) => { e.preventDefault(); handlePress('DOWN', e); }}
         className={`absolute left-1/2 -translate-x-1/2 bottom-0 w-[30px] h-[30px] md:w-[32px] md:h-[32px] rounded-b-sm ${buttonClasses} ${disabledClasses}`}
         animate={{
           backgroundColor: buttonPressed === 'DOWN' ? '#1c1c1c' : '#2c2c2c',
@@ -75,8 +88,7 @@ export function DPad({ onPress, buttonPressed, disabled = false }: DPadProps) {
 
       {/* Left Button */}
       <motion.button
-        onClick={() => handlePress('LEFT')}
-        onTouchStart={(e) => { e.stopPropagation(); handlePress('LEFT'); }}
+        onPointerDown={(e) => { e.preventDefault(); handlePress('LEFT', e); }}
         className={`absolute top-1/2 -translate-y-1/2 left-0 w-[30px] h-[30px] md:w-[32px] md:h-[32px] rounded-l-sm ${buttonClasses} ${disabledClasses}`}
         animate={{
           backgroundColor: buttonPressed === 'LEFT' ? '#1c1c1c' : '#2c2c2c',
@@ -90,8 +102,7 @@ export function DPad({ onPress, buttonPressed, disabled = false }: DPadProps) {
 
       {/* Right Button */}
       <motion.button
-        onClick={() => handlePress('RIGHT')}
-        onTouchStart={(e) => { e.stopPropagation(); handlePress('RIGHT'); }}
+        onPointerDown={(e) => { e.preventDefault(); handlePress('RIGHT', e); }}
         className={`absolute top-1/2 -translate-y-1/2 right-0 w-[30px] h-[30px] md:w-[32px] md:h-[32px] rounded-r-sm ${buttonClasses} ${disabledClasses}`}
         animate={{
           backgroundColor: buttonPressed === 'RIGHT' ? '#1c1c1c' : '#2c2c2c',
@@ -114,7 +125,20 @@ export function DPad({ onPress, buttonPressed, disabled = false }: DPadProps) {
  * A/B Action Buttons Component
  */
 export function ActionButtons({ onAPress, onBPress, buttonPressed, disabled = false }: ActionButtonsProps) {
-  const buttonClasses = "bg-[#9c1b4d] rounded-full shadow-lg border-2 border-[#7a1540] hover:bg-[#ac2b5d] cursor-pointer touch-manipulation";
+  const lastPressTime = useRef<number>(0);
+
+  const handlePress = useCallback((action: () => void, e: React.PointerEvent) => {
+    if (disabled) return;
+
+    const now = Date.now();
+    if (now - lastPressTime.current < 50) return;
+    lastPressTime.current = now;
+
+    e.preventDefault();
+    action();
+  }, [disabled]);
+
+  const buttonClasses = "bg-[#9c1b4d] rounded-full shadow-lg border-2 border-[#7a1540] hover:bg-[#ac2b5d] cursor-pointer touch-manipulation select-none";
   const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
 
   return (
@@ -122,8 +146,7 @@ export function ActionButtons({ onAPress, onBPress, buttonPressed, disabled = fa
       {/* B Button */}
       <div className="flex flex-col items-center">
         <motion.button
-          onClick={onBPress}
-          onTouchStart={(e) => { e.stopPropagation(); onBPress(); }}
+          onPointerDown={(e) => handlePress(onBPress, e)}
           className={`w-[44px] h-[44px] md:w-[48px] md:h-[48px] ${buttonClasses} ${disabledClasses}`}
           animate={{
             scale: buttonPressed === 'B' ? 0.9 : 1,
@@ -134,14 +157,13 @@ export function ActionButtons({ onAPress, onBPress, buttonPressed, disabled = fa
           aria-label="B Button"
           disabled={disabled}
         />
-        <span className="text-[9px] text-[#4a4a4a] font-bold mt-1">B</span>
+        <span className="text-[9px] text-[#4a4a4a] font-bold mt-1 select-none">B</span>
       </div>
 
       {/* A Button */}
       <div className="flex flex-col items-center -mt-5">
         <motion.button
-          onClick={onAPress}
-          onTouchStart={(e) => { e.stopPropagation(); onAPress(); }}
+          onPointerDown={(e) => handlePress(onAPress, e)}
           className={`w-[44px] h-[44px] md:w-[48px] md:h-[48px] ${buttonClasses} ${disabledClasses}`}
           animate={{
             scale: buttonPressed === 'A' ? 0.9 : 1,
@@ -152,7 +174,7 @@ export function ActionButtons({ onAPress, onBPress, buttonPressed, disabled = fa
           aria-label="A Button"
           disabled={disabled}
         />
-        <span className="text-[9px] text-[#4a4a4a] font-bold mt-1">A</span>
+        <span className="text-[9px] text-[#4a4a4a] font-bold mt-1 select-none">A</span>
       </div>
     </div>
   );
@@ -162,7 +184,20 @@ export function ActionButtons({ onAPress, onBPress, buttonPressed, disabled = fa
  * Start/Select Buttons Component
  */
 export function StartSelectButtons({ onStartPress, onSelectPress, buttonPressed, disabled = false }: StartSelectProps) {
-  const buttonClasses = "bg-[#6c6c6b] rounded-full shadow-inner -rotate-[25deg] hover:bg-[#7c7c7b] cursor-pointer touch-manipulation";
+  const lastPressTime = useRef<number>(0);
+
+  const handlePress = useCallback((action: () => void, e: React.PointerEvent) => {
+    if (disabled) return;
+
+    const now = Date.now();
+    if (now - lastPressTime.current < 50) return;
+    lastPressTime.current = now;
+
+    e.preventDefault();
+    action();
+  }, [disabled]);
+
+  const buttonClasses = "bg-[#6c6c6b] rounded-full shadow-inner -rotate-[25deg] hover:bg-[#7c7c7b] cursor-pointer touch-manipulation select-none";
   const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
 
   return (
@@ -170,8 +205,7 @@ export function StartSelectButtons({ onStartPress, onSelectPress, buttonPressed,
       {/* SELECT Button */}
       <div className="flex flex-col items-center">
         <motion.button
-          onClick={onSelectPress}
-          onTouchStart={(e) => { e.stopPropagation(); onSelectPress(); }}
+          onPointerDown={(e) => handlePress(onSelectPress, e)}
           className={`w-[36px] h-[10px] ${buttonClasses} ${disabledClasses}`}
           animate={{
             scale: buttonPressed === 'SELECT' ? 0.9 : 1,
@@ -182,14 +216,13 @@ export function StartSelectButtons({ onStartPress, onSelectPress, buttonPressed,
           aria-label="Select"
           disabled={disabled}
         />
-        <span className="text-[7px] text-[#4a4a4a] font-bold mt-2">SELECT</span>
+        <span className="text-[7px] text-[#4a4a4a] font-bold mt-2 select-none">SELECT</span>
       </div>
 
       {/* START Button */}
       <div className="flex flex-col items-center">
         <motion.button
-          onClick={onStartPress}
-          onTouchStart={(e) => { e.stopPropagation(); onStartPress(); }}
+          onPointerDown={(e) => handlePress(onStartPress, e)}
           className={`w-[36px] h-[10px] ${buttonClasses} ${disabledClasses}`}
           animate={{
             scale: buttonPressed === 'START' ? 0.9 : 1,
@@ -200,7 +233,7 @@ export function StartSelectButtons({ onStartPress, onSelectPress, buttonPressed,
           aria-label="Start"
           disabled={disabled}
         />
-        <span className="text-[7px] text-[#4a4a4a] font-bold mt-2">START</span>
+        <span className="text-[7px] text-[#4a4a4a] font-bold mt-2 select-none">START</span>
       </div>
     </div>
   );

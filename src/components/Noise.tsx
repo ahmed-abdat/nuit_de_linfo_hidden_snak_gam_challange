@@ -1,20 +1,14 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, memo } from 'react';
 
 interface NoiseProps {
-  patternSize?: number;
-  patternScaleX?: number;
-  patternScaleY?: number;
   patternRefreshInterval?: number;
   patternAlpha?: number;
 }
 
-const Noise: React.FC<NoiseProps> = ({
-  patternSize = 250,
-  patternScaleX = 1,
-  patternScaleY = 1,
+const Noise: React.FC<NoiseProps> = memo(function Noise({
   patternRefreshInterval = 2,
   patternAlpha = 15
-}) => {
+}) {
   const grainRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -88,6 +82,6 @@ const Noise: React.FC<NoiseProps> = ({
       }}
     />
   );
-};
+});
 
 export default Noise;

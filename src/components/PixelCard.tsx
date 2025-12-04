@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo } from 'react';
 import { JSX } from 'react';
 
 class Pixel {
@@ -166,7 +166,7 @@ interface VariantConfig {
   noFocus: boolean;
 }
 
-export default function PixelCard({
+const PixelCard = memo(function PixelCard({
   variant = 'default',
   gap,
   speed,
@@ -235,7 +235,7 @@ export default function PixelCard({
     let allIdle = true;
     for (let i = 0; i < pixelsRef.current.length; i++) {
       const pixel = pixelsRef.current[i];
-      // @ts-ignore
+      // @ts-expect-error - Dynamic method call on Pixel class
       pixel[fnName]();
       if (!pixel.isIdle) {
         allIdle = false;
@@ -295,4 +295,6 @@ export default function PixelCard({
       {children}
     </div>
   );
-}
+});
+
+export default PixelCard;

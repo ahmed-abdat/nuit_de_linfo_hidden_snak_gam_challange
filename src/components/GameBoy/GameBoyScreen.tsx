@@ -42,7 +42,6 @@ interface GameBoyScreenProps {
   gameScreen: GameScreen;
   obstacles: Obstacle[];
   scorePopups: ScorePopup[];
-  screenFlash: boolean;
 
   // Canvas ref (passed from parent for external access)
   canvasRef?: React.RefObject<HTMLCanvasElement | null>;
@@ -63,7 +62,6 @@ export function GameBoyScreen({
   gameScreen,
   obstacles,
   scorePopups,
-  screenFlash,
   canvasRef: externalRef,
 }: GameBoyScreenProps) {
   const internalRef = useRef<HTMLCanvasElement>(null);
@@ -146,12 +144,6 @@ export function GameBoyScreen({
       cellHeight,
       colors: { background, light, dark, darkest },
     });
-
-    // Apply screen flash effect (overlay after game render)
-    if (screenFlash) {
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    }
   }, [
     snake,
     food,
@@ -167,7 +159,6 @@ export function GameBoyScreen({
     gameScreen,
     obstacles,
     scorePopups,
-    screenFlash,
     cellWidth,
     cellHeight,
     canvasRef,

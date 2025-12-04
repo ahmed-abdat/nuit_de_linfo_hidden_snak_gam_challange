@@ -69,7 +69,6 @@ export function GameBoy({
   const [cartridgeState, setCartridgeState] = useState<CartridgeState>('empty');
   const [bootPhase, setBootPhase] = useState(0);
   const [screenShake, setScreenShake] = useState(false);
-  const [screenFlash, setScreenFlash] = useState(false);
   const [buttonPressed, setButtonPressed] = useState<string | null>(null);
 
   // Refs
@@ -517,10 +516,6 @@ export function GameBoy({
         setObstacles(prev => [...prev, newObstacle]);
         setLastObstacleScore(score);
         playSound('levelUp');
-
-        // Screen flash effect
-        setScreenFlash(true);
-        setTimeout(() => setScreenFlash(false), EFFECTS.obstacleSpawnFlashDuration);
       }
     }
   }, [score, gameStarted, gameOver, isPaused, difficulty, obstacles.length, lastObstacleScore, generateObstacle, playSound]);
@@ -642,7 +637,6 @@ export function GameBoy({
               gameScreen={gameScreen}
               obstacles={obstacles}
               scorePopups={scorePopups}
-              screenFlash={screenFlash}
               canvasRef={canvasRef}
             />
           </div>

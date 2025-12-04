@@ -1,4 +1,4 @@
-import { useRef, useEffect, forwardRef } from 'react';
+import { useRef, useEffect, forwardRef, memo } from 'react';
 import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber';
 import { EffectComposer, wrapEffect } from '@react-three/postprocessing';
 import { Effect } from 'postprocessing';
@@ -302,7 +302,7 @@ interface DitherProps {
   mouseRadius?: number;
 }
 
-export default function Dither({
+const Dither = memo(function Dither({
   waveSpeed = 0.05,
   waveFrequency = 3,
   waveAmplitude = 0.3,
@@ -333,4 +333,6 @@ export default function Dither({
       />
     </Canvas>
   );
-}
+});
+
+export default Dither;

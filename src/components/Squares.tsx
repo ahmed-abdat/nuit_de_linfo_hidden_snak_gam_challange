@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, memo } from 'react';
 
 type CanvasStrokeStyle = string | CanvasGradient | CanvasPattern;
 
@@ -13,23 +13,28 @@ interface SquaresProps {
   borderColor?: CanvasStrokeStyle;
   squareSize?: number;
   hoverFillColor?: CanvasStrokeStyle;
+  /** Target FPS - lower values improve performance (default: 30) */
+  targetFps?: number;
 }
 
-const Squares: React.FC<SquaresProps> = ({
+const Squares: React.FC<SquaresProps> = memo(function Squares({
   direction = 'right',
   speed = 1,
   borderColor = '#999',
   squareSize = 40,
-  hoverFillColor = '#222'
-}) => {
+  hoverFillColor = '#222',
+  targetFps = 30
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number | null>(null);
   const numSquaresX = useRef<number>(0);
   const numSquaresY = useRef<number>(0);
   const gridOffset = useRef<GridOffset>({ x: 0, y: 0 });
   const hoveredSquareRef = useRef<GridOffset | null>(null);
+  const lastFrameTimeRef = useRef<number>(0);
 
   useEffect(() => {
+    const frameInterval = 1000 / targetFps;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -86,7 +91,14 @@ const Squares: React.FC<SquaresProps> = ({
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     };
 
-    const updateAnimation = () => {
+    const updateAnimation = (currentTime: number) => {
+      requestRef.current = requestAnimationFrame(updateAnimation);
+
+      // FPS throttling - skip frame if not enough time has passed
+      const elapsed = currentTime - lastFrameTimeRef.current;
+      if (elapsed < frameInterval) return;
+      lastFrameTimeRef.current = currentTime - (elapsed % frameInterval);
+
       const effectiveSpeed = Math.max(speed, 0.1);
       switch (direction) {
         case 'right':
@@ -110,7 +122,6 @@ const Squares: React.FC<SquaresProps> = ({
       }
 
       drawGrid();
-      requestRef.current = requestAnimationFrame(updateAnimation);
     };
 
     const handleMouseMove = (event: MouseEvent) => {
@@ -147,9 +158,9 @@ const Squares: React.FC<SquaresProps> = ({
       canvas.removeEventListener('mousemove', handleMouseMove);
       canvas.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [direction, speed, borderColor, hoverFillColor, squareSize]);
+  }, [direction, speed, borderColor, hoverFillColor, squareSize, targetFps]);
 
   return <canvas ref={canvasRef} className="w-full h-full border-none block"></canvas>;
-};
+});
 
 export default Squares;

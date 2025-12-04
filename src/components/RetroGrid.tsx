@@ -1,17 +1,21 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 
 interface RetroGridProps {
   gridColor?: string;
   showScanlines?: boolean;
   glowEffect?: boolean;
   className?: string;
+  /** Target FPS - lower values improve performance (default: 30) */
+  targetFps?: number;
 }
 
-function RetroGrid({
+// Memoized component to prevent unnecessary re-renders
+const RetroGrid = memo(function RetroGrid({
   gridColor = "#ff00ff",
   showScanlines = true,
   glowEffect = true,
   className = "",
+  targetFps = 30,
 }: RetroGridProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -53,6 +57,10 @@ function RetroGrid({
     let offset = 0;
     const speed = 1.5;
     let animationFrameId = 0;
+
+    // FPS throttling
+    const frameInterval = 1000 / targetFps;
+    let lastFrameTime = 0;
 
     const project3DTo2D = (x: number, y: number, z: number) => {
       const relX = x - cameraX;
@@ -116,7 +124,14 @@ function RetroGrid({
       ctx.globalAlpha = 1;
     };
 
-    const animate = () => {
+    const animate = (currentTime: number) => {
+      animationFrameId = requestAnimationFrame(animate);
+
+      // FPS throttling - skip frame if not enough time has passed
+      const elapsed = currentTime - lastFrameTime;
+      if (elapsed < frameInterval) return;
+      lastFrameTime = currentTime - (elapsed % frameInterval);
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const rgb = hexToRgb(gridColor);
@@ -164,17 +179,15 @@ function RetroGrid({
       vignette.addColorStop(1, "rgba(0,0,0,0.5)");
       ctx.fillStyle = vignette;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      animationFrameId = requestAnimationFrame(animate);
     };
 
-    animate();
+    animationFrameId = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener("resize", resizeCanvas);
       cancelAnimationFrame(animationFrameId);
     };
-  }, [gridColor, showScanlines, glowEffect]);
+  }, [gridColor, showScanlines, glowEffect, targetFps]);
 
   return (
     <canvas
@@ -183,6 +196,6 @@ function RetroGrid({
       style={{ background: "#000000", width: "100%", height: "100%" }}
     />
   );
-}
+});
 
 export default RetroGrid;
