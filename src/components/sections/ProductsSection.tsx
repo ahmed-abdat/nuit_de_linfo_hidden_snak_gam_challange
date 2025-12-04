@@ -1,12 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { ArrowRight, Star } from 'lucide-react';
+import { toast } from 'sonner';
 import Shuffle from '@/components/Shuffle';
 import { DesktopOnly } from '@/components/DesktopOnly';
+import { ProductDetailModal } from '@/components/ProductDetailModal';
 import { products } from '@/data/products';
+import type { Product } from '@/types';
 import {
   FADE_IN_UP,
   FADE_IN_UP_30,
@@ -17,11 +21,31 @@ import {
   TAP_SCALE,
 } from '@/constants';
 
+const handleViewAllProducts = () => {
+  toast('Bientot disponible !', {
+    description: 'Notre catalogue complet arrive tres prochainement.',
+    duration: 3000,
+  });
+};
+
 // Lazy load heavy components
-const ClickSpark = dynamic(() => import('@/components/ClickSpark'), { ssr: false });
 const Magnet = dynamic(() => import('@/components/Magnet'), { ssr: false });
+const ClickSpark = dynamic(() => import('@/components/ClickSpark'), { ssr: false });
 
 export function ProductsSection() {
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleProductClick = (product: Product) => {
+    setSelectedProduct(product);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedProduct(null);
+  };
+
   return (
     <section id="products" className="relative z-10 py-24">
       <div className="max-w-7xl mx-auto px-6">
@@ -47,7 +71,7 @@ export function ProductsSection() {
             />
           </h2>
           <p className="text-slate-400">
-            Des pièces authentiques, restaurées avec passion et garanties.
+            Des pieces authentiques, restaurees avec passion et garanties.
           </p>
         </motion.div>
 
@@ -60,7 +84,8 @@ export function ProductsSection() {
               viewport={VIEWPORT_ONCE}
               transition={{ delay: index * 0.05 }}
               whileHover={PRODUCT_HOVER}
-              className="group bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all duration-300"
+              onClick={() => handleProductClick(product)}
+              className="group bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all duration-300 cursor-pointer"
             >
               <div className="relative aspect-square overflow-hidden bg-slate-900/50">
                 <Image
@@ -81,7 +106,7 @@ export function ProductsSection() {
                     {product.badge === 'rare' ? 'Rare' :
                      product.badge === 'bestseller' ? 'Best-seller' :
                      product.badge === 'new' ? 'Nouveau' :
-                     product.badge === 'limited' ? 'Édition Limitée' :
+                     product.badge === 'limited' ? 'Edition Limitee' :
                      'Promo'}
                   </span>
                 )}
@@ -90,10 +115,19 @@ export function ProductsSection() {
                     Stock faible
                   </span>
                 )}
+                {/* Hover overlay */}
+                <div className="absolute inset-0 bg-cyan-500/0 group-hover:bg-cyan-500/10 transition-colors duration-300 flex items-center justify-center">
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 text-slate-900 px-4 py-2 rounded-full text-sm font-bold">
+                    Voir details
+                  </span>
+                </div>
               </div>
               <div className="p-5">
                 <p className="text-xs text-cyan-400 uppercase tracking-wider mb-1 font-medium">
-                  {product.category}
+                  {product.category === 'console' ? 'Console' :
+                   product.category === 'cartridge' ? 'Cartouche' :
+                   product.category === 'accessory' ? 'Accessoire' :
+                   'Collection'}
                 </p>
                 <h3 className="font-bold text-white mb-1">{product.name}</h3>
                 {product.subtitle && (
@@ -127,6 +161,7 @@ export function ProductsSection() {
           <DesktopOnly
             fallback={
               <motion.button
+                onClick={handleViewAllProducts}
                 whileTap={TAP_SCALE}
                 className="inline-flex items-center gap-2 border-2 border-cyan-500/50 text-cyan-400 px-8 py-4 rounded-full font-bold hover:bg-cyan-500/10 transition-all"
               >
@@ -135,9 +170,10 @@ export function ProductsSection() {
               </motion.button>
             }
           >
-            <Magnet padding={80} magnetStrength={3}>
-              <ClickSpark sparkColor="#06b6d4" sparkCount={12} sparkRadius={50} duration={450}>
+            <ClickSpark sparkColor="#22d3ee" sparkCount={10} sparkRadius={50} duration={500}>
+              <Magnet padding={30} magnetStrength={1.5}>
                 <motion.button
+                  onClick={handleViewAllProducts}
                   whileHover={BUTTON_HOVER_GLOW_STRONG}
                   whileTap={TAP_SCALE}
                   className="inline-flex items-center gap-2 border-2 border-cyan-500/50 text-cyan-400 px-8 py-4 rounded-full font-bold hover:bg-cyan-500/10 transition-all"
@@ -145,11 +181,18 @@ export function ProductsSection() {
                   Voir Tous les Produits
                   <ArrowRight size={18} />
                 </motion.button>
-              </ClickSpark>
-            </Magnet>
+              </Magnet>
+            </ClickSpark>
           </DesktopOnly>
         </motion.div>
       </div>
+
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        product={selectedProduct}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+      />
     </section>
   );
 }

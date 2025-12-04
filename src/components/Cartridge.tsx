@@ -2,6 +2,7 @@
 
 import { motion, useMotionValue, useSpring, useTransform, PanInfo } from 'framer-motion';
 import { useRef, useState, useSyncExternalStore } from 'react';
+import { Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CartridgeProps {
@@ -18,6 +19,7 @@ interface CartridgeProps {
   onDrag?: (x: number, y: number) => void;
   onDragEnd?: (x: number, y: number) => void;
   onTap?: () => void;
+  onInfoClick?: () => void;
 }
 
 // Check for mobile using useSyncExternalStore for hydration safety
@@ -46,6 +48,7 @@ export function Cartridge({
   onDrag,
   onDragEnd,
   onTap,
+  onInfoClick,
 }: CartridgeProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -159,6 +162,19 @@ export function Cartridge({
           className="mx-2 mt-5 mb-3 p-2 rounded-sm relative overflow-hidden"
           style={{ backgroundColor: labelColor }}
         >
+          {/* Info button */}
+          {onInfoClick && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onInfoClick();
+              }}
+              className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white/20 hover:bg-white/40 flex items-center justify-center transition-colors z-10"
+              aria-label="Voir les details"
+            >
+              <Info size={10} className="text-white" />
+            </button>
+          )}
           {/* Game Title */}
           <div className="relative text-center">
             <div className="font-bold text-xs md:text-sm text-white drop-shadow-sm">
@@ -187,7 +203,7 @@ export function Cartridge({
 
       </motion.div>
 
-      {/* Hover tooltip - OUTSIDE motion.div to avoid 3D transform issues */}
+      {/* Simple hover tooltip - OUTSIDE motion.div to avoid 3D transform issues */}
       {isHovering && !isMobile && !isDragging && (
         <motion.div
           initial={{ opacity: 0, y: 5 }}

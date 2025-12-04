@@ -31,15 +31,47 @@ interface BackgroundEffectsProps {
 
 /**
  * SVG-based grid pattern for mobile - pure SVG, zero JS animation loops
- * Much lighter than canvas-based RetroGrid
+ * Matches desktop RetroGrid color scheme (magenta/cyan neon aesthetic)
  */
 function MobileBackground() {
   return (
     <div className="fixed inset-0 z-0 overflow-hidden">
-      {/* Base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a1a0a] via-[#0d1d0d] to-[#0f1f0f]" />
+      {/* Sky gradient - matches desktop RetroGrid magenta tones */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(to bottom,
+            rgba(13, 0, 38, 1) 0%,
+            rgba(26, 0, 51, 1) 30%,
+            rgba(51, 0, 77, 1) 50%,
+            rgba(89, 0, 102, 1) 70%,
+            rgba(140, 0, 153, 1) 85%,
+            rgba(178, 0, 191, 1) 100%
+          )`,
+        }}
+      />
 
-      {/* Magic UI Grid Pattern - pure SVG, very lightweight */}
+      {/* Ground gradient - dark section at bottom (55% and below) */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-[45%]"
+        style={{
+          background: `linear-gradient(to bottom,
+            rgba(26, 0, 38, 1) 0%,
+            rgba(13, 0, 20, 1) 30%,
+            rgba(0, 0, 0, 1) 100%
+          )`,
+        }}
+      />
+
+      {/* Horizon glow - magenta/pink glow where sky meets ground */}
+      <div
+        className="absolute inset-x-0 top-[50%] h-[20%] pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse 100% 50% at 50% 50%, rgba(255, 0, 255, 0.3) 0%, transparent 70%)',
+        }}
+      />
+
+      {/* Magic UI Grid Pattern - more visible magenta/cyan */}
       <GridPattern
         width={40}
         height={40}
@@ -47,16 +79,24 @@ function MobileBackground() {
         y={-1}
         className={cn(
           'absolute inset-0 h-full w-full',
-          'fill-cyan-500/5 stroke-cyan-500/10',
-          '[mask-image:radial-gradient(ellipse_at_center,white_20%,transparent_80%)]'
+          'fill-fuchsia-500/10 stroke-fuchsia-400/20',
+          '[mask-image:linear-gradient(to_bottom,transparent_0%,white_40%,white_60%,transparent_100%)]'
         )}
       />
 
-      {/* Subtle radial vignette */}
+      {/* Scanline effect - subtle horizontal lines */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-10"
+        style={{
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.3) 2px, rgba(0,0,0,0.3) 4px)',
+        }}
+      />
+
+      {/* Vignette - darker at edges */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.5) 100%)',
+          background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.6) 100%)',
         }}
       />
     </div>

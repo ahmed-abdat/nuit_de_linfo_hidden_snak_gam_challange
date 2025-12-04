@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
 import Shuffle from '@/components/Shuffle';
 import { DesktopOnly } from '@/components/DesktopOnly';
 import { collections } from '@/data/products';
@@ -12,10 +13,24 @@ import {
   TAP_SCALE,
 } from '@/constants';
 
+const handleExploreCollection = (title: string) => {
+  toast(`Collection "${title}"`, {
+    description: 'Page de collection bientot disponible !',
+    duration: 3000,
+  });
+};
+
+const handleViewAll = () => {
+  toast('Catalogue complet', {
+    description: 'Notre catalogue de +500 jeux arrive tres prochainement.',
+    duration: 3000,
+  });
+};
+
 // Lazy load heavy components
 const PixelCard = dynamic(() => import('@/components/PixelCard'), { ssr: false });
-const ClickSpark = dynamic(() => import('@/components/ClickSpark'), { ssr: false });
 const Magnet = dynamic(() => import('@/components/Magnet'), { ssr: false });
+const ClickSpark = dynamic(() => import('@/components/ClickSpark'), { ssr: false });
 
 export function CollectionsSection() {
   return (
@@ -92,7 +107,13 @@ export function CollectionsSection() {
                   <p className="text-white/80 text-sm mb-4 line-clamp-2">
                     {collection.description}
                   </p>
-                  <button className="text-cyan-400 font-bold text-sm inline-flex items-center gap-2 group-hover:gap-3 transition-all">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleExploreCollection(collection.title);
+                    }}
+                    className="text-cyan-400 font-bold text-sm inline-flex items-center gap-2 group-hover:gap-3 transition-all hover:text-cyan-300"
+                  >
                     Explorer
                     <ArrowRight size={16} />
                   </button>
@@ -125,24 +146,28 @@ export function CollectionsSection() {
               <DesktopOnly
                 fallback={
                   <motion.button
+                    onClick={handleViewAll}
                     whileTap={TAP_SCALE}
-                    className="bg-white text-slate-900 px-6 py-3 rounded-full font-bold text-sm shadow-xl"
+                    className="bg-white text-slate-900 px-6 py-3 rounded-full font-bold text-sm shadow-xl hover:bg-slate-100 transition-colors flex-shrink-0"
                   >
                     Voir Tout
                   </motion.button>
                 }
               >
-                <Magnet padding={60} magnetStrength={3}>
+                <div className="flex-shrink-0">
                   <ClickSpark sparkColor="#ffffff" sparkCount={10} sparkRadius={40} duration={400}>
-                    <motion.button
-                      whileHover={BUTTON_HOVER_GLOW_WHITE}
-                      whileTap={TAP_SCALE}
-                      className="bg-white text-slate-900 px-6 py-3 rounded-full font-bold text-sm shadow-xl"
-                    >
-                      Voir Tout
-                    </motion.button>
+                    <Magnet padding={30} magnetStrength={1.5}>
+                      <motion.button
+                        onClick={handleViewAll}
+                        whileHover={BUTTON_HOVER_GLOW_WHITE}
+                        whileTap={TAP_SCALE}
+                        className="bg-white text-slate-900 px-6 py-3 rounded-full font-bold text-sm shadow-xl hover:bg-slate-100 transition-colors"
+                      >
+                        Voir Tout
+                      </motion.button>
+                    </Magnet>
                   </ClickSpark>
-                </Magnet>
+                </div>
               </DesktopOnly>
             </div>
           </div>

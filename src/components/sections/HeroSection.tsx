@@ -79,14 +79,15 @@ export function HeroSection() {
               Découvrez le <span className="text-cyan-400 font-semibold">secret caché</span> dans notre console interactive.
             </motion.p>
 
-            {/* CTAs with Magnet + ClickSpark - Desktop only for effects */}
-            <motion.div
-              initial={FADE_IN_UP}
-              animate={FADE_IN_UP_VISIBLE}
-              transition={{ delay: 0.5 }}
-              className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-8 sm:mb-12"
-            >
-              <DesktopOnly
+            {/* CTAs with Magnet - Desktop only for effects */}
+            <ClickSpark sparkColor="#22d3ee" sparkCount={8} sparkRadius={40} duration={400}>
+              <motion.div
+                initial={FADE_IN_UP}
+                animate={FADE_IN_UP_VISIBLE}
+                transition={{ delay: 0.5 }}
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 mb-8 sm:mb-12"
+              >
+                <DesktopOnly
                 fallback={
                   <motion.a
                     href="#coffre-fort"
@@ -99,45 +100,44 @@ export function HeroSection() {
                 }
               >
                 <Magnet padding={40} magnetStrength={2}>
-                  <ClickSpark sparkColor="#06b6d4" sparkCount={10} sparkRadius={40} duration={400}>
-                    <motion.a
-                      href="#coffre-fort"
-                      whileHover={BUTTON_HOVER_GLOW}
-                      whileTap={TAP_SCALE}
-                      className="inline-flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-colors shadow-lg shadow-cyan-500/20"
-                    >
-                      <Gamepad2 size={16} className="sm:w-[18px] sm:h-[18px]" />
-                      Jouer Maintenant
-                    </motion.a>
-                  </ClickSpark>
+                  <motion.a
+                    href="#coffre-fort"
+                    whileHover={BUTTON_HOVER_GLOW}
+                    whileTap={TAP_SCALE}
+                    className="inline-flex items-center justify-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-colors shadow-lg shadow-cyan-500/20"
+                  >
+                    <Gamepad2 size={16} className="sm:w-[18px] sm:h-[18px]" />
+                    Jouer Maintenant
+                  </motion.a>
                 </Magnet>
               </DesktopOnly>
 
               <DesktopOnly
                 fallback={
-                  <motion.button
+                  <motion.a
+                    href="#products"
                     whileTap={TAP_SCALE}
                     className="inline-flex items-center justify-center gap-2 border border-slate-600 text-slate-300 hover:text-white hover:border-cyan-500/50 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-colors"
                   >
                     Explorer
                     <ArrowRight size={14} className="sm:w-4 sm:h-4" />
-                  </motion.button>
+                  </motion.a>
                 }
               >
                 <Magnet padding={40} magnetStrength={2}>
-                  <ClickSpark sparkColor="#94a3b8" sparkCount={8} sparkRadius={35} duration={400}>
-                    <motion.button
-                      whileHover={HOVER_SCALE}
-                      whileTap={TAP_SCALE}
-                      className="inline-flex items-center justify-center gap-2 border border-slate-600 text-slate-300 hover:text-white hover:border-cyan-500/50 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-colors"
-                    >
-                      Explorer
-                      <ArrowRight size={14} className="sm:w-4 sm:h-4" />
-                    </motion.button>
-                  </ClickSpark>
+                  <motion.a
+                    href="#products"
+                    whileHover={HOVER_SCALE}
+                    whileTap={TAP_SCALE}
+                    className="inline-flex items-center justify-center gap-2 border border-slate-600 text-slate-300 hover:text-white hover:border-cyan-500/50 px-5 sm:px-6 py-2.5 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-colors"
+                  >
+                    Explorer
+                    <ArrowRight size={14} className="sm:w-4 sm:h-4" />
+                  </motion.a>
                 </Magnet>
               </DesktopOnly>
-            </motion.div>
+              </motion.div>
+            </ClickSpark>
 
             {/* Animated Stats */}
             <motion.div

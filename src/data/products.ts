@@ -15,6 +15,7 @@ export const products: Product[] = [
     year: 1989,
     description: 'Console originale avec coque pastel personnalisée, état mint.',
     rating: 4.9,
+    reviewCount: 127,
   },
   {
     id: 'handheld-pro',
@@ -29,6 +30,7 @@ export const products: Product[] = [
     year: 2025,
     description: 'Console portable moderne avec émulation rétro intégrée.',
     rating: 4.7,
+    reviewCount: 43,
   },
   {
     id: 'nes-complete',
@@ -43,6 +45,7 @@ export const products: Product[] = [
     year: 1985,
     description: 'Console NES avec manette, câbles et jeu Super Mario Bros inclus.',
     rating: 4.8,
+    reviewCount: 256,
   },
   {
     id: 'console-dark',
@@ -56,6 +59,7 @@ export const products: Product[] = [
     year: 1986,
     description: 'Console style NES avec manette sans fil moderne.',
     rating: 4.6,
+    reviewCount: 89,
   },
   {
     id: 'cartridge-pack',
@@ -68,6 +72,7 @@ export const products: Product[] = [
     stock: 'in_stock',
     description: 'Lot de 6 cartouches Game Boy assorties, testées et fonctionnelles.',
     rating: 4.4,
+    reviewCount: 67,
   },
   {
     id: 'legends-pack',
@@ -82,6 +87,7 @@ export const products: Product[] = [
     stock: 'low_stock',
     description: 'Le trio iconique réunis : Mario, Zelda, et Sonic. Pièces de collection.',
     rating: 5.0,
+    reviewCount: 34,
   },
   {
     id: 'mario-kart-8',
@@ -96,6 +102,7 @@ export const products: Product[] = [
     year: 2017,
     description: 'Jeu Switch en excellent état avec boîtier original.',
     rating: 4.9,
+    reviewCount: 312,
   },
 ];
 

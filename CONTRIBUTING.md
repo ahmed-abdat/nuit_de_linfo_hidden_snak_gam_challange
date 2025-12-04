@@ -45,12 +45,7 @@ open http://localhost:3000
 src/
 ├── app/                    # Next.js App Router pages
 │   ├── page.tsx           # Main landing page
-│   ├── globals.css        # Global styles + Tailwind theme
-│   └── variants/          # Landing page variants
-│       ├── arcade/        # Neon arcade style
-│       ├── modern/        # Clean e-commerce
-│       ├── museum/        # Gallery exhibition
-│       └── premium/       # Luxury collector
+│   └── globals.css        # Global styles + Tailwind theme
 │
 ├── components/            # React components
 │   ├── GameBoy/          # 🎮 Main game module (see below)
@@ -313,19 +308,6 @@ playSound('eat');
 
 ## Common Tasks
 
-### Adding a New Landing Page Variant
-
-1. Create folder: `src/app/variants/your-variant/page.tsx`
-2. Copy structure from existing variant
-3. Customize colors in `globals.css`:
-
-```css
-.variant-your-variant {
-  --primary: your-color;
-  --accent: your-accent;
-}
-```
-
 ### Modifying Game Constants
 
 Edit `src/constants/game.ts`:
@@ -355,12 +337,8 @@ pnpm lint
 # 2. Build to catch type errors
 pnpm build
 
-# 3. Test all variants
+# 3. Test the site
 open http://localhost:3000
-open http://localhost:3000/variants/arcade
-open http://localhost:3000/variants/modern
-open http://localhost:3000/variants/museum
-open http://localhost:3000/variants/premium
 ```
 
 ---

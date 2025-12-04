@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { ConsoleCarousel } from '@/components/ConsoleCarousel';
 import { Cartridge } from '@/components/Cartridge';
+import { CartridgeDetailModal } from '@/components/CartridgeDetailModal';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { cartridges, ExtendedCartridgeData } from '@/data/cartridges';
 import { ConsoleId } from '@/data/consoles';
@@ -33,6 +34,8 @@ export function CoffreFortSection({ variant = 'premium', className }: CoffreFort
   const [isDragging, setIsDragging] = useState(false);
   const [isNearDropZone, setIsNearDropZone] = useState(false);
   const [insertingCartridge, setInsertingCartridge] = useState<ExtendedCartridgeData | null>(null);
+  const [selectedCartridgeInfo, setSelectedCartridgeInfo] = useState<ExtendedCartridgeData | null>(null);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
   // Use ref to track drop zone proximity - refs don't have stale closure issues
@@ -94,6 +97,12 @@ export function CoffreFortSection({ variant = 'premium', className }: CoffreFort
   // Handle cartridge eject
   const handleCartridgeEject = useCallback(() => {
     setActiveCartridge(null);
+  }, []);
+
+  // Handle cartridge info click
+  const handleCartridgeInfoClick = useCallback((cartridge: ExtendedCartridgeData) => {
+    setSelectedCartridgeInfo(cartridge);
+    setIsInfoModalOpen(true);
   }, []);
 
   // Check if point is near drop zone using cached rect (OPTIMIZED)
@@ -271,6 +280,7 @@ export function CoffreFortSection({ variant = 'premium', className }: CoffreFort
                           handleCartridgeInsert(cartridge.id);
                         }
                       }}
+                      onInfoClick={() => handleCartridgeInfoClick(cartridge)}
                     />
                   </motion.div>
                 ))}
@@ -379,6 +389,16 @@ export function CoffreFortSection({ variant = 'premium', className }: CoffreFort
           )}
         </div>
       </div>
+
+      {/* Cartridge Info Modal */}
+      <CartridgeDetailModal
+        cartridge={selectedCartridgeInfo}
+        isOpen={isInfoModalOpen}
+        onClose={() => {
+          setIsInfoModalOpen(false);
+          setSelectedCartridgeInfo(null);
+        }}
+      />
     </section>
   );
 }

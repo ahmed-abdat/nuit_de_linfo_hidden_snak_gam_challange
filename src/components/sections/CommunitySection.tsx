@@ -4,12 +4,20 @@ import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
 import { DesktopOnly } from '@/components/DesktopOnly';
 import { TAP_SCALE } from '@/constants';
 
+const handleJoinCommunity = () => {
+  toast.success('Bienvenue dans la communaute !', {
+    description: 'Inscrivez-vous a notre newsletter pour rester informe.',
+    duration: 4000,
+  });
+};
+
 // Lazy load heavy components
-const ClickSpark = dynamic(() => import('@/components/ClickSpark'), { ssr: false });
 const Magnet = dynamic(() => import('@/components/Magnet'), { ssr: false });
+const ClickSpark = dynamic(() => import('@/components/ClickSpark'), { ssr: false });
 
 export function CommunitySection() {
   return (
@@ -21,6 +29,7 @@ export function CommunitySection() {
           fill
           sizes="100vw"
           className="object-cover opacity-20"
+          priority
         />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent" />
       </div>
@@ -69,6 +78,7 @@ export function CommunitySection() {
           <DesktopOnly
             fallback={
               <motion.button
+                onClick={handleJoinCommunity}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -80,9 +90,10 @@ export function CommunitySection() {
               </motion.button>
             }
           >
-            <Magnet padding={80} magnetStrength={3}>
-              <ClickSpark sparkColor="#06b6d4" sparkCount={12} sparkRadius={50} duration={500}>
+            <ClickSpark sparkColor="#22d3ee" sparkCount={12} sparkRadius={60} duration={500}>
+              <Magnet padding={30} magnetStrength={1.5}>
                 <motion.button
+                  onClick={handleJoinCommunity}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -93,8 +104,8 @@ export function CommunitySection() {
                   Rejoindre la Communaute
                   <ArrowRight size={18} />
                 </motion.button>
-              </ClickSpark>
-            </Magnet>
+              </Magnet>
+            </ClickSpark>
           </DesktopOnly>
         </div>
       </div>

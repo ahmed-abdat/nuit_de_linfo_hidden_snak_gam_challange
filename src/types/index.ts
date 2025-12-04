@@ -17,6 +17,7 @@ export interface Product {
   year?: number;
   description: string;
   rating?: number;
+  reviewCount?: number;
 }
 
 export interface CartridgeData {
