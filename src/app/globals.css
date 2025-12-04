@@ -425,3 +425,23 @@
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ================================
+   404 PAGE EFFECTS
+   ================================ */
+.scanline-overlay {
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.3) 2px,
+    rgba(0, 0, 0, 0.3) 4px
+  );
+}
+
+.grid-pattern-overlay {
+  background-image:
+    linear-gradient(var(--gameboy-green-light) 1px, transparent 1px),
+    linear-gradient(90deg, var(--gameboy-green-light) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
